@@ -1,0 +1,390 @@
+[
+  {
+    "name": "initial e2e4 by white",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "e2",
+      "to": "e4"
+    },
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "initial e7e5 by black — not your turn",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "black",
+    "move": {
+      "from": "e7",
+      "to": "e5"
+    },
+    "expectValid": false,
+    "expectReason": "not your turn"
+  },
+  {
+    "name": "e2e5 by white — illegal move",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "e2",
+      "to": "e5"
+    },
+    "expectValid": false,
+    "expectReason": "illegal move"
+  },
+  {
+    "name": "z9 to e4 by white — malformed move",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "z9",
+      "to": "e4"
+    },
+    "expectValid": false,
+    "expectReason": "malformed move"
+  },
+  {
+    "name": "promotion required — a7a8 without promotion",
+    "state": {
+      "fen": "8/P6k/8/8/8/8/8/4K3 w - - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "8/P6k/8/8/8/8/8/4K3 w - -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "a7",
+      "to": "a8"
+    },
+    "expectValid": false,
+    "expectReason": "promotion required"
+  },
+  {
+    "name": "promotion ok — a7a8q",
+    "state": {
+      "fen": "8/P6k/8/8/8/8/8/4K3 w - - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "8/P6k/8/8/8/8/8/4K3 w - -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "a7",
+      "to": "a8",
+      "promotion": "q"
+    },
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "fool's mate — Qd8-h4#",
+    "state": {
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3 0 2",
+      "moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4"
+      ],
+      "history": [
+        "f3",
+        "e5",
+        "g4"
+      ],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq -",
+        "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6",
+        "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3"
+      ],
+      "lastMove": {
+        "from": "g2",
+        "to": "g4"
+      }
+    },
+    "seat": "black",
+    "move": {
+      "from": "d8",
+      "to": "h4"
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "win",
+      "winner": "black",
+      "reason": "checkmate"
+    }
+  },
+  {
+    "name": "stalemate — Qb1-b6 boxes the king",
+    "state": {
+      "fen": "k7/8/2K5/8/8/8/8/1Q6 w - - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "k7/8/2K5/8/8/8/8/1Q6 w - -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "b1",
+      "to": "b6"
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "draw",
+      "reason": "stalemate"
+    }
+  },
+  {
+    "name": "fifty-move claim — halfmove 100",
+    "state": {
+      "fen": "7k/8/8/8/8/8/R7/K7 w - - 100 80",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "7k/8/8/8/8/8/R7/K7 w - -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "claim": "draw"
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "draw",
+      "reason": "fifty-move rule (claimed)"
+    }
+  },
+  {
+    "name": "insufficient material — Kxd2 takes the last rook",
+    "state": {
+      "fen": "8/8/8/2k5/8/8/3r4/3K4 w - - 4 40",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "8/8/8/2k5/8/8/3r4/3K4 w - -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "from": "d1",
+      "to": "d2"
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "draw",
+      "reason": "insufficient material"
+    }
+  },
+  {
+    "name": "game over — move after fool's mate terminal",
+    "state": {
+      "fen": "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",
+      "moves": [
+        "f2f3",
+        "e7e5",
+        "g2g4",
+        "d8h4"
+      ],
+      "history": [
+        "f3",
+        "e5",
+        "g4",
+        "Qh4#"
+      ],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq -",
+        "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6",
+        "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq g3",
+        "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": {
+        "from": "d8",
+        "to": "h4"
+      }
+    },
+    "seat": "white",
+    "move": {
+      "from": "e2",
+      "to": "e4"
+    },
+    "expectValid": false,
+    "expectReason": "game over"
+  },
+  {
+    "name": "threefold repetition — Nf6-g8 is 3rd occurrence but not auto-draw",
+    "state": {
+      "fen": "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 7 4",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1"
+      ],
+      "history": [
+        "Nf3",
+        "Nf6",
+        "Ng1",
+        "Ng8",
+        "Nf3",
+        "Nf6",
+        "Ng1"
+      ],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq -"
+      ],
+      "lastMove": {
+        "from": "f3",
+        "to": "g1"
+      }
+    },
+    "seat": "black",
+    "move": {
+      "from": "f6",
+      "to": "g8"
+    },
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "threefold claim — claim draw at 3rd occurrence of start key",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 8 5",
+      "moves": [
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8",
+        "g1f3",
+        "g8f6",
+        "f3g1",
+        "f6g8"
+      ],
+      "history": [
+        "Nf3",
+        "Nf6",
+        "Ng1",
+        "Ng8",
+        "Nf3",
+        "Nf6",
+        "Ng1",
+        "Ng8"
+      ],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq -",
+        "rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": {
+        "from": "f6",
+        "to": "g8"
+      }
+    },
+    "seat": "white",
+    "move": {
+      "claim": "draw"
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "draw",
+      "reason": "threefold repetition (claimed)"
+    }
+  },
+  {
+    "name": "resign — white resigns",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "resign": true
+    },
+    "expectValid": true,
+    "expectResultAfter": {
+      "kind": "win",
+      "winner": "black",
+      "reason": "resignation"
+    }
+  },
+  {
+    "name": "claim draw — not available at start",
+    "state": {
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [],
+      "history": [],
+      "keys": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      ],
+      "lastMove": null
+    },
+    "seat": "white",
+    "move": {
+      "claim": "draw"
+    },
+    "expectValid": false,
+    "expectReason": "no draw to claim"
+  }
+]

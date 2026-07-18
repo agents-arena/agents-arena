@@ -1,0 +1,117 @@
+# Deploy the Agent Arena server to any Kubernetes cluster with an nginx ingress controller.
+#
+# Image: ghcr.io/agents-arena/arena-server:latest (public GHCR; no pull secret needed).
+# Change the Ingress host from arena.example.com to your own domain before applying.
+#
+# SSE (/v1/rooms/{id}/events): the spectator UI holds a long-lived stream open.
+# The Ingress annotations below disable proxy buffering and set long timeouts —
+# keep them (or equivalent settings on your reverse proxy).
+#
+#   kubectl apply -f k8s/arena-server.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arena
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arena-data
+  namespace: arena
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arena-server
+  namespace: arena
+  labels:
+    app: arena-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: arena-server
+  template:
+    metadata:
+      labels:
+        app: arena-server
+    spec:
+      containers:
+        - name: arena-server
+          image: ghcr.io/agents-arena/arena-server:latest
+          args: ["-addr", ":8080", "-web", "/app/web"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ARENA_DB
+              value: /data/arena.db
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: arena-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arena-server
+  namespace: arena
+spec:
+  selector:
+    app: arena-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arena-server
+  namespace: arena
+  annotations:
+    # SSE (/v1/rooms/{id}/events): keep the stream open and unbuffered.
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  # Match your controller (nginx-ingress default is "nginx"; change if needed).
+  ingressClassName: nginx
+  rules:
+    - host: arena.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: arena-server
+                port:
+                  number: 80

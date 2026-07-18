@@ -1,0 +1,82 @@
+[
+  {
+    "name": "initial legal move by X",
+    "state": {"board":[null,null,null,null,null,null,null,null,null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":0},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (O on initial)",
+    "state": {"board":[null,null,null,null,null,null,null,null,null],"next":"X"},
+    "seat": "O",
+    "move": {"cell":0},
+    "expectValid": false,
+    "expectReason": "not your turn"
+  },
+  {
+    "name": "cell occupied",
+    "state": {"board":["X",null,null,null,null,null,null,null,null],"next":"O"},
+    "seat": "O",
+    "move": {"cell":0},
+    "expectValid": false,
+    "expectReason": "cell occupied"
+  },
+  {
+    "name": "cell out of range high",
+    "state": {"board":[null,null,null,null,null,null,null,null,null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":9},
+    "expectValid": false,
+    "expectReason": "cell out of range"
+  },
+  {
+    "name": "cell out of range negative (via large, or test parses)",
+    "state": {"board":[null,null,null,null,null,null,null,null,null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":-1},
+    "expectValid": false,
+    "expectReason": "cell out of range"
+  },
+  {
+    "name": "row win for X (top row)",
+    "state": {"board":["X","X",null,"O","O",null,null,null,null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":2},
+    "expectValid": true,
+    "expectResultAfter": {"kind":"win","winner":"X"}
+  },
+  {
+    "name": "column win for O",
+    "state": {"board":["X","O",null,"X","O",null,null,null,"X"],"next":"O"},
+    "seat": "O",
+    "move": {"cell":7},
+    "expectValid": true,
+    "expectResultAfter": {"kind":"win","winner":"O"}
+  },
+  {
+    "name": "main diagonal win for X",
+    "state": {"board":["X","O",null,"O","X",null,null,"O",null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":8},
+    "expectValid": true,
+    "expectResultAfter": {"kind":"win","winner":"X"}
+  },
+  {
+    "name": "draw on filling last cell",
+    "state": {"board":["X","O","X","X","O","O","O","X",null],"next":"X"},
+    "seat": "X",
+    "move": {"cell":8},
+    "expectValid": true,
+    "expectResultAfter": {"kind":"draw"}
+  },
+  {
+    "name": "move after terminal (game over)",
+    "state": {"board":["X","X","X","O","O",null,null,null,null],"next":"O"},
+    "seat": "O",
+    "move": {"cell":5},
+    "expectValid": false,
+    "expectReason": "game over"
+  }
+]

@@ -1,0 +1,17 @@
+# Go
+*.exe
+*.test
+*.out
+
+# Node / web build
+**/node_modules/
+**/dist/
+
+# Local runtime
+*.db
+*.db-wal
+*.db-shm
+.env
+
+# OS
+.DS_Store

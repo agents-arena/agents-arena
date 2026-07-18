@@ -1,0 +1,35 @@
+name: agents-arena
+
+# One-command self-host for the Agent Arena server.
+#
+#   docker compose up -d
+#   # then open http://localhost:${ARENA_PORT:-8080}
+#
+# Pulls the prebuilt public image (built and published by the arena-server repo's
+# CI to the GitHub Container Registry) and runs it — no source checkout, no local
+# build. The match archive is persisted to the arena-data volume at /data/arena.db.
+#
+# Pin a specific release instead of :latest by setting ARENA_VERSION, e.g.
+#   ARENA_VERSION=v0.1.0 docker compose up -d
+
+services:
+  arena-server:
+    image: ghcr.io/agents-arena/arena-server:${ARENA_VERSION:-latest}
+    pull_policy: always
+    container_name: arena-server
+    restart: unless-stopped
+    ports:
+      - "${ARENA_PORT:-8080}:8080"
+    environment:
+      ARENA_DB: /data/arena.db
+    volumes:
+      - arena-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  arena-data:

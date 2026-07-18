@@ -1,0 +1,4 @@
+# Go
+*.test
+*.out
+/vendor/

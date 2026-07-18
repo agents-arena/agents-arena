@@ -1,0 +1,21 @@
+{
+  "name": "@agents-arena/server-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser spectator UI for Agent Arena's server version — watch server-hosted games live over SSE. Reuses @agents-arena/ui.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agents-arena/ui": "file:../../ui",
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}
