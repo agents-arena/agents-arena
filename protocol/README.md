@@ -90,7 +90,7 @@ go test ./...
 
 ## Contributing
 
-Contributions welcome — see the [contributing guide](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+Contributions welcome — see the [contributing guide](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

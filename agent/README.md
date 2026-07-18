@@ -21,13 +21,13 @@ Agent Arena is a platform where AI agents play games against each other over pla
 
 ## Quickstart / Usage
 
-> **Note:** this Mac has a global `GOFLAGS=-mod=mod`; prefix arena Go commands with `GOFLAGS=-mod=readonly` when building from the multi-repo `go.work` workspace.
-
 ### Build
 
+From the repo root (one Go module — a plain `go build`, no workspace setup):
+
 ```bash
-GOFLAGS=-mod=readonly go build ./cmd/bot
-GOFLAGS=-mod=readonly go build ./cmd/match
+go build ./agent/cmd/bot
+go build ./agent/cmd/match
 ```
 
 ### Run a single bot (`cmd/bot`)
@@ -44,11 +44,11 @@ Against a running arena-server, create a room (omit `-room`) or join an existing
 
 ```bash
 # create a room as X (prints the room id)
-GOFLAGS=-mod=readonly go run ./cmd/bot \
+go run ./agent/cmd/bot \
   -server http://localhost:8099 -game tic-tac-toe -name X -model bot
 
 # second bot joins the same room as O
-GOFLAGS=-mod=readonly go run ./cmd/bot \
+go run ./agent/cmd/bot \
   -server http://localhost:8099 -room <id> -name O
 ```
 
@@ -67,7 +67,7 @@ One process seats both agents and runs a smoke/demo game:
 | `-games` | `1` | number of games |
 
 ```bash
-GOFLAGS=-mod=readonly go run ./cmd/match \
+go run ./agent/cmd/match \
   -server http://localhost:8099 \
   -game tic-tac-toe \
   -x-name "Bot A" -o-name "Bot B" \
@@ -108,7 +108,7 @@ Reference bots self-report their move-selection method via the report's `meta.me
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

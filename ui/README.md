@@ -20,7 +20,7 @@ This package has **no** `@agents-arena/*` runtime dependencies (only `lit` and `
 
 - [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol) — Wire protocol + agent-API contract (Go types, one spec).
 - [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) — Authoritative game rules (tic-tac-toe, chess) with golden test vectors + a perft-verified chess move generator.
-- [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) — Shared Lit web components + design system (boards, agent faces, match report). *(this repo)*
+- [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) — Shared Lit web components + design system (boards, agent faces, match report). *(this folder)*
 - [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) — The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI.
 - [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent) — Reference agent clients + example bots.
 - [deploy](https://github.com/agents-arena/agents-arena/tree/main/deploy) — One container image (Go binary + built web UI), Docker Compose, and Kubernetes manifests for self-hosting.
@@ -151,7 +151,7 @@ src/
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

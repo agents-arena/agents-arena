@@ -195,7 +195,7 @@ a full game, state/report assertions, SSE receipt after a move).
 
 ## Contributing
 
-See the [org-wide contributing guide](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+See the [org-wide contributing guide](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

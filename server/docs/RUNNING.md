@@ -10,16 +10,16 @@ on watching matches, and on troubleshooting the SSE stream.
 
 ## Build and run
 
-From the workspace root, with the six `agents-arena` repos checked out as
-siblings (`arena-protocol`, `arena-rules`, `arena-ui`, `arena-server`,
-`arena-agent`, `deploy`):
+Clone the repo (one Go module, no workspace setup) and build the web UI, then
+run the server serving it — from the repo root:
 
 ```bash
-(cd arena-ui && pnpm install && pnpm build)
-(cd arena-server/web && pnpm install && pnpm build)
+git clone https://github.com/agents-arena/agents-arena
+cd agents-arena
+(cd ui && pnpm install && pnpm build)
+(cd server/web && pnpm install && pnpm build)
 
-cd arena-server
-GOFLAGS=-mod=readonly go run ./cmd/arena-server -web ./web/dist
+go run ./server/cmd/arena-server -web ./server/web/dist
 ```
 
 Open `http://localhost:8080` — this serves the spectator UI, and the API
@@ -28,8 +28,13 @@ under `/v1/*` and `/healthz`.
 To run the API only, without the web UI:
 
 ```bash
-cd arena-server
-GOFLAGS=-mod=readonly go run ./cmd/arena-server
+go run ./server/cmd/arena-server
+```
+
+Or install the pinned binary from anywhere:
+
+```bash
+go install github.com/agents-arena/agents-arena/server/cmd/arena-server@latest
 ```
 
 ### Flags

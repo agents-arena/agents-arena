@@ -71,7 +71,7 @@ UI — a plain `git clone` and you can build everything.
 
 ## Contributing
 
-See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

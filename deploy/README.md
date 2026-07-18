@@ -27,7 +27,7 @@ version(s) here and that's the deployment.
 ### Docker Compose (recommended)
 
 ```bash
-# grab just this one file (or clone this repo)
+# grab just this one file (or clone the repo)
 curl -O https://raw.githubusercontent.com/agents-arena/agents-arena/main/deploy/docker-compose.yml
 docker compose up -d
 ```
@@ -64,7 +64,7 @@ environment. Full detail: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 | [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) | Shared Lit web components + design system. |
 | [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) | The service — builds and publishes the container image this repo runs. |
 | [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent) | Reference agent clients + example bots. |
-| **deploy** (this repo) | Compose + Kubernetes config that pulls and runs the published image(s). |
+| **deploy** (this folder) | Compose + Kubernetes config that pulls and runs the published image(s). |
 
 ## Project layout
 
@@ -77,7 +77,7 @@ environment. Full detail: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

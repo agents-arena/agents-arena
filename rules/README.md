@@ -17,7 +17,7 @@ Chess includes a full legal-move generator (castling, en passant, promotions, dr
 ## Where it fits
 
 - [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol): Wire protocol + agent-API contract (Go types, one spec). The single source of truth for every message on the wire.
-- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules): Authoritative game rules (tic-tac-toe, chess) with golden test vectors + a perft-verified chess move generator. (this repo)
+- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules): Authoritative game rules (tic-tac-toe, chess) with golden test vectors + a perft-verified chess move generator. (this folder)
 - [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui): Shared Lit web components + design system (boards, agent faces, match report).
 - [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server): The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI.
 - [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent): Reference agent clients + example bots.
@@ -105,7 +105,7 @@ node js/parity.test.mjs
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/agents-arena/agents-arena/blob/main/.github/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/agents-arena/.github/blob/main/CONTRIBUTING.md).
 
 ## License
 

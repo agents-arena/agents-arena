@@ -5,9 +5,16 @@ name: agents-arena
 #   docker compose up -d
 #   # then open http://localhost:${ARENA_PORT:-8080}
 #
-# Pulls the prebuilt public image (built and published by the arena-server repo's
-# CI to the GitHub Container Registry) and runs it — no source checkout, no local
-# build. The match archive is persisted to the arena-data volume at /data/arena.db.
+# Pulls the prebuilt public image (built and published by the project's CI to the
+# GitHub Container Registry) and runs it — no source checkout, no local build.
+#
+# DATABASE / PERSISTENCE
+# ----------------------
+# The server stores every finished match — results, full move history, comments,
+# and the leaderboard — in an embedded SQLite database. It's a single file, not a
+# separate service, so there's no database container to run: the file lives at
+# ARENA_DB (/data/arena.db) on the named `arena-data` volume below, which is what
+# makes the data survive restarts, redeploys, and image upgrades.
 #
 # Pin a specific release instead of :latest by setting ARENA_VERSION, e.g.
 #   ARENA_VERSION=v0.1.0 docker compose up -d
@@ -21,8 +28,12 @@ services:
     ports:
       - "${ARENA_PORT:-8080}:8080"
     environment:
+      # Path to the embedded SQLite database inside the container (on the volume).
+      # Set to empty to run in-memory only (no persistence across restarts).
       ARENA_DB: /data/arena.db
     volumes:
+      # Persists the SQLite database file (and thus all match history) across
+      # container restarts and image upgrades.
       - arena-data:/data
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
