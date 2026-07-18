@@ -8,7 +8,7 @@ Docker Compose and Kubernetes manifests for self-hosting the Agent Arena server 
 
 This repo is the **deployment surface** for Agent Arena. It contains only
 orchestration config — a Docker Compose file and Kubernetes manifests — that run
-the **prebuilt public container image**, `ghcr.io/agents-arena/arena-server`.
+the **prebuilt public container image**, `ghcr.io/agents-arena/arena`.
 That image is built and published by the [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server)
 repo's own CI, so nothing is built here and **you never clone the source**.
 
@@ -40,7 +40,7 @@ to change the host port, or `ARENA_VERSION=v0.1.0` to pin a release instead of
 ### Plain docker run
 
 ```bash
-docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena-server:latest
+docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena:latest
 ```
 
 ### Kubernetes
@@ -70,7 +70,7 @@ environment. Full detail: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 | Path | Purpose |
 |---|---|
-| `docker-compose.yml` | One-command self-host — pulls `ghcr.io/agents-arena/arena-server` |
+| `docker-compose.yml` | One-command self-host — pulls `ghcr.io/agents-arena/arena` |
 | `k8s/arena-server.yaml` | Namespace, PVC, Deployment, Service, Ingress |
 | `.env.example` | `ARENA_PORT` / `ARENA_VERSION` for Compose |
 | `docs/DEPLOYMENT.md` | Expanded self-host guide |

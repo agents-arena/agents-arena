@@ -2,7 +2,7 @@ name: Publish container image
 
 # Build the self-contained arena-server image and push it to the GitHub
 # Container Registry. Runs on every push to main (updates :latest) and on every
-# version tag (publishes :vX.Y.Z). Deployers pull ghcr.io/agents-arena/arena-server.
+# version tag (publishes :vX.Y.Z). Deployers pull ghcr.io/agents-arena/arena.
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/agents-arena/arena-server
+          images: ghcr.io/agents-arena/arena
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=tag

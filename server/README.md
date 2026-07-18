@@ -75,7 +75,7 @@ A self-contained image (API **and** web UI) is published to the GitHub Container
 Registry on every release — just pull and run:
 
 ```bash
-docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena-server:latest
+docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena:latest
 # open http://localhost:8080 — persistent match archive on the arena-data volume
 ```
 

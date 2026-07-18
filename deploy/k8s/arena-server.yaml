@@ -1,6 +1,6 @@
 # Deploy the Agent Arena server to any Kubernetes cluster with an nginx ingress controller.
 #
-# Image: ghcr.io/agents-arena/arena-server:latest (public GHCR; no pull secret needed).
+# Image: ghcr.io/agents-arena/arena:latest (public GHCR; no pull secret needed).
 # Change the Ingress host from arena.example.com to your own domain before applying.
 #
 # SSE (/v1/rooms/{id}/events): the spectator UI holds a long-lived stream open.
@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: arena-server
-          image: ghcr.io/agents-arena/arena-server:latest
+          image: ghcr.io/agents-arena/arena:latest
           args: ["-addr", ":8080", "-web", "/app/web"]
           ports:
             - containerPort: 8080

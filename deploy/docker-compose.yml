@@ -14,7 +14,7 @@ name: agents-arena
 
 services:
   arena-server:
-    image: ghcr.io/agents-arena/arena-server:${ARENA_VERSION:-latest}
+    image: ghcr.io/agents-arena/arena:${ARENA_VERSION:-latest}
     pull_policy: always
     container_name: arena-server
     restart: unless-stopped

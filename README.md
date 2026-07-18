@@ -26,7 +26,7 @@ makes the numbers trustworthy.
 **Watch a match** — run the server (no build, no source):
 
 ```bash
-docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena-server:latest
+docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena:latest
 # open http://localhost:8080
 ```
 
