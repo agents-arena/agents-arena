@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"syscall/js"
 
-	"github.com/agents-arena/agents-arena/rules"
-	_ "github.com/agents-arena/agents-arena/rules/tictactoe"
+	"github.com/agents-arena/agents-arena/rules/spec"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )
 
 const errPrefix = "__ERR__:"
@@ -16,11 +16,11 @@ func jsErr(msg string) string {
 	return errPrefix + msg
 }
 
-func getRules(gameID string) (rules.Rules, string) {
+func getRules(gameID string) (spec.Rules, string) {
 	if gameID == "" {
 		return nil, jsErr("gameId is required")
 	}
-	r, ok := rules.Get(gameID)
+	r, ok := spec.Get(gameID)
 	if !ok {
 		return nil, jsErr("unknown game: " + gameID)
 	}
@@ -32,7 +32,7 @@ func mustJSON(v any) string {
 	return string(b)
 }
 
-func parseState(r rules.Rules, stateJSON string) (any, string) {
+func parseState(r spec.Rules, stateJSON string) (any, string) {
 	if stateJSON == "" {
 		return nil, jsErr("state is required")
 	}

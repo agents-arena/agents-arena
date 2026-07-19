@@ -15,7 +15,7 @@ import (
 	"github.com/agents-arena/agents-arena/server/internal/room"
 	"github.com/agents-arena/agents-arena/server/internal/store"
 
-	_ "github.com/agents-arena/agents-arena/rules/tictactoe"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )
 
 func newTestServer(t *testing.T) (*room.Manager, *httptest.Server) {

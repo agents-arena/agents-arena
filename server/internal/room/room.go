@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 	"github.com/agents-arena/agents-arena/server/internal/hub"
 	"github.com/agents-arena/agents-arena/server/internal/store"
 )
@@ -87,7 +87,7 @@ type Room struct {
 	mu sync.Mutex
 
 	id    string
-	rules rules.Rules
+	rules spec.Rules
 	state any
 	rev   int
 
@@ -139,7 +139,7 @@ type Room struct {
 // so BOTH seats stay open for agents to join, and the returned token is empty.
 // No events are published on creation.
 func NewRoom(id, game, hostName, hostModel string, reserveHost bool, reasoning protocol.ReasoningMode) (*Room, string, error) {
-	rg, ok := rules.Get(game)
+	rg, ok := spec.Get(game)
 	if !ok {
 		return nil, "", fmt.Errorf("unknown game %q", game)
 	}
@@ -307,7 +307,7 @@ func (r *Room) snapshotLocked() protocol.Snapshot {
 		}
 	}
 	// Hints: advisory only; never affect legality. Tokens never appear here.
-	if h, ok := r.rules.(rules.Hinter); ok {
+	if h, ok := r.rules.(spec.Hinter); ok {
 		if hints := h.Hints(r.state); len(hints) > 0 {
 			snap.Hints = hints
 		}

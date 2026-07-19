@@ -10,7 +10,7 @@ This module is the **single source of truth** for game rules in [Agent Arena](ht
 
 `arena-rules` implements each game as a pure, side-effect-free `Rules` interface: init, validate, apply, legal moves, terminal detection, and serialize/deserialize for the wire. Games self-register via `init()` into a thread-safe registry keyed by game ID (`tic-tac-toe`, `chess`).
 
-[arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) uses this package natively for move validation and state transitions. Agents and tools can import the same package (or exercise the same logic via WASM) so clients and the server never disagree about legality. Shared golden vectors in `testdata/` lock behavior across Go, WASM, and any other consumer.
+[arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) uses this package natively for move validation and state transitions. Agents and tools can import the same package (or exercise the same logic via WASM) so clients and the server never disagree about legality. Each game owns its golden vectors under `games/<game>/testdata/`, locking behavior across Go, WASM, and any other consumer.
 
 Chess includes a full legal-move generator (castling, en passant, promotions, draw claims, resign) validated by a standard **perft** suite against known node counts.
 
@@ -26,7 +26,7 @@ Chess includes a full legal-move generator (castling, en passant, promotions, dr
 ## Quickstart / Usage
 
 ```sh
-go get github.com/agents-arena/agents-arena/rules
+go get github.com/agents-arena/agents-arena/rules/spec
 ```
 
 Blank-import game packages so they self-register, then look them up by ID:
@@ -38,13 +38,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/agents-arena/agents-arena/rules"
-	_ "github.com/agents-arena/agents-arena/rules/chess"     // self-registers "chess"
-	_ "github.com/agents-arena/agents-arena/rules/tictactoe" // self-registers "tic-tac-toe"
+	"github.com/agents-arena/agents-arena/rules/spec"
+	_ "github.com/agents-arena/agents-arena/rules/games/chess"     // self-registers "chess"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe" // self-registers "tic-tac-toe"
 )
 
 func main() {
-	r, ok := rules.Get("tic-tac-toe")
+	r, ok := spec.Get("tic-tac-toe")
 	if !ok {
 		panic("game not registered")
 	}
@@ -68,7 +68,7 @@ func main() {
 }
 ```
 
-The full contract is the `Rules` interface in `rules.go` (`Meta`, `Init`, `ToMove`, `Validate`, `Apply`, `LegalMoves`, `Terminal`, `Serialize`, `Deserialize`). Optional `Hinter` exposes advisory strings (e.g. draw-claim warnings) without affecting legality.
+The full contract is the `Rules` interface in `spec/spec.go` (`Meta`, `Init`, `ToMove`, `Validate`, `Apply`, `LegalMoves`, `Terminal`, `Serialize`, `Deserialize`). Optional `Hinter` exposes advisory strings (e.g. draw-claim warnings) without affecting legality.
 
 Run the suite (use `GOFLAGS=-mod=readonly` in this workspace):
 
@@ -76,7 +76,7 @@ Run the suite (use `GOFLAGS=-mod=readonly` in this workspace):
 GOFLAGS=-mod=readonly go test ./...
 ```
 
-Chess move-generation correctness is also covered by **perft** in `chess/perft_test.go` (startpos, Kiwipete, and other standard positions with known node counts at depth 1–4).
+Chess move-generation correctness is also covered by **perft** in `games/chess/perft_test.go` (startpos, Kiwipete, and other standard positions with known node counts at depth 1–4).
 
 ### WASM / browser parity
 
@@ -88,20 +88,21 @@ cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" wasm/wasm_exec.js
 node js/parity.test.mjs
 ```
 
-`js/rules.mjs` loads `wasm/rules.wasm` and exposes `init` / `toMove` / `validate` / `apply` / `legalMoves` / `terminal` over plain JSON state and moves. `parity.test.mjs` replays the golden vectors through WASM and asserts match against the expected outcomes.
+`js/rules.mjs` loads `wasm/rules.wasm` and exposes `init` / `toMove` / `validate` / `apply` / `legalMoves` / `terminal` over plain JSON state and moves. `parity.test.mjs` discovers every `games/*/testdata/*.golden.json` and replays those vectors through WASM (skipping games not registered in the wasm build).
 
 ## Project layout
 
 | Path | Description |
 |------|-------------|
-| `rules.go` | Game-agnostic `Rules` / `GameMeta` / `Hinter` contracts and the `Register` / `Get` / `All` registry |
-| `tictactoe/` | Tic-tac-toe rules (9-cell board, seats X/O); self-registers as `tic-tac-toe` |
-| `chess/` | Chess rules + bitboard-free engine (FEN, legal moves, perft); self-registers as `chess` |
-| `chess/perft_test.go` | Perft suite verifying full legal-move generation |
-| `testdata/*.golden.json` | Shared golden vectors (init, legal/illegal moves, wins, draws, terminals) |
+| `spec/spec.go` | Game-agnostic `Rules` / `GameMeta` / `Hinter` contracts and the `Register` / `Get` / `All` registry (`package spec`) |
+| `games/tictactoe/` | Tic-tac-toe rules (9-cell board, seats X/O); self-registers as `tic-tac-toe` |
+| `games/tictactoe/testdata/` | Golden vectors owned by tic-tac-toe |
+| `games/chess/` | Chess rules + bitboard-free engine (FEN, legal moves, perft); self-registers as `chess` |
+| `games/chess/testdata/` | Golden vectors owned by chess |
+| `games/chess/perft_test.go` | Perft suite verifying full legal-move generation |
 | `wasm/` | `//go:build js && wasm` entrypoint that exports the rules registry to JS; prebuilt `rules.wasm` + `wasm_exec.js` |
 | `js/rules.mjs` | ESM loader for the WASM module (Node + browser) |
-| `js/parity.test.mjs` | Runs golden vectors through WASM and asserts Go/JS parity |
+| `js/parity.test.mjs` | Discovers per-game golden vectors and asserts Go/JS parity via WASM |
 
 ## Contributing
 

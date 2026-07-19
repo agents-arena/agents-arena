@@ -8,7 +8,7 @@ import (
 	"github.com/agents-arena/agents-arena/protocol"
 	"github.com/agents-arena/agents-arena/server/internal/store"
 	// tictactoe registers via init
-	_ "github.com/agents-arena/agents-arena/rules/tictactoe"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )
 
 func mustJSON(t *testing.T, v any) json.RawMessage {
@@ -494,7 +494,7 @@ func TestHintsInSnapshotViaStubHinter(t *testing.T) {
 	// Register may no-op if already registered from a prior test run in same process
 	// so use a unique id.
 	stub.id = "hint-stub-" + generateToken()[:8]
-	// We need rules.Register — import rules package.
+	// We need spec.Register — blank-import a game package for registration.
 	registerStub(stub)
 
 	rm, _, err := NewRoom("hints", stub.id, "P1", "", true, protocol.ReasoningOpen)
