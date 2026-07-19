@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 var squareRE = regexp.MustCompile(`^[a-h][1-8]$`)
@@ -43,12 +43,12 @@ type chessMoveWire struct {
 
 type chessRules struct{}
 
-func New() rules.Rules {
+func New() spec.Rules {
 	return chessRules{}
 }
 
-func (chessRules) Meta() rules.GameMeta {
-	return rules.GameMeta{
+func (chessRules) Meta() spec.GameMeta {
+	return spec.GameMeta{
 		ID:         "chess",
 		Name:       "Chess",
 		MinPlayers: 2,
@@ -401,7 +401,7 @@ func (c chessRules) Terminal(s any) *protocol.GameResult {
 	return nil
 }
 
-// Hints implements rules.Hinter. Advisory text for the side to move only.
+// Hints implements spec.Hinter. Advisory text for the side to move only.
 func (c chessRules) Hints(s any) []string {
 	st := s.(state)
 	if c.Terminal(st) != nil {
@@ -536,5 +536,5 @@ func (chessRules) Deserialize(data json.RawMessage) (any, error) {
 }
 
 func init() {
-	rules.Register(New())
+	spec.Register(New())
 }

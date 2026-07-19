@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 type goldenCase struct {
@@ -22,7 +22,7 @@ type goldenCase struct {
 
 func loadGolden(t *testing.T) []goldenCase {
 	t.Helper()
-	path := filepath.Join("..", "testdata", "chess.golden.json")
+	path := filepath.Join("testdata", "chess.golden.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("failed to read golden: %v", err)
@@ -35,7 +35,7 @@ func loadGolden(t *testing.T) []goldenCase {
 }
 
 func TestGoldenVectors(t *testing.T) {
-	g := New().(rules.Rules)
+	g := New().(spec.Rules)
 	cases := loadGolden(t)
 
 	for _, c := range cases {

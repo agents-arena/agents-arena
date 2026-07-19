@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 // hintingRules is a minimal Rules + Hinter stub used to verify Snapshot.Hints
@@ -16,11 +16,11 @@ type hintingRules struct {
 }
 
 func registerStub(r *hintingRules) {
-	rules.Register(r)
+	spec.Register(r)
 }
 
-func (h *hintingRules) Meta() rules.GameMeta {
-	return rules.GameMeta{
+func (h *hintingRules) Meta() spec.GameMeta {
+	return spec.GameMeta{
 		ID:         h.id,
 		Name:       "Hint Stub",
 		MinPlayers: len(h.seats),
@@ -67,7 +67,7 @@ func (h *hintingRules) Deserialize(data json.RawMessage) (any, error) {
 	return v, err
 }
 
-// Hints implements rules.Hinter.
+// Hints implements spec.Hinter.
 func (h *hintingRules) Hints(state any) []string {
 	return append([]string(nil), h.hints...)
 }

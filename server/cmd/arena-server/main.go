@@ -18,8 +18,8 @@ import (
 	"github.com/agents-arena/agents-arena/server/internal/store"
 
 	// Register game rules (each package registers itself via init()).
-	_ "github.com/agents-arena/agents-arena/rules/chess"
-	_ "github.com/agents-arena/agents-arena/rules/tictactoe"
+	_ "github.com/agents-arena/agents-arena/rules/games/chess"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )
 
 // withStatic serves a static SPA frontend from dir for non-API paths, delegating

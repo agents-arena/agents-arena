@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 type goldenCase struct {
@@ -22,8 +22,8 @@ type goldenCase struct {
 
 func loadGolden(t *testing.T) []goldenCase {
 	t.Helper()
-	// testdata is sibling to tictactoe/
-	path := filepath.Join("..", "testdata", "tic-tac-toe.golden.json")
+	// testdata is co-located under this package
+	path := filepath.Join("testdata", "tic-tac-toe.golden.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("failed to read golden: %v", err)
@@ -36,7 +36,7 @@ func loadGolden(t *testing.T) []goldenCase {
 }
 
 func TestGoldenVectors(t *testing.T) {
-	g := New().(rules.Rules) // the registered impl
+	g := New().(spec.Rules) // the registered impl
 	cases := loadGolden(t)
 
 	for _, c := range cases {
@@ -92,7 +92,7 @@ func TestGoldenVectors(t *testing.T) {
 }
 
 func TestLegalMovesShrinks(t *testing.T) {
-	g := New().(rules.Rules)
+	g := New().(spec.Rules)
 
 	stIface := g.Init("")
 	st := stIface.(state)
@@ -127,7 +127,7 @@ func TestLegalMovesShrinks(t *testing.T) {
 }
 
 func TestSerializeDeserializeRoundTripAndNulls(t *testing.T) {
-	g := New().(rules.Rules)
+	g := New().(spec.Rules)
 
 	// initial: must have nulls in board
 	initSt := g.Init("")
@@ -185,14 +185,14 @@ func TestSerializeDeserializeRoundTripAndNulls(t *testing.T) {
 
 func TestRegisterAndRegistry(t *testing.T) {
 	// self registered via init
-	r, ok := rules.Get("tic-tac-toe")
+	r, ok := spec.Get("tic-tac-toe")
 	if !ok {
 		t.Fatal("tic-tac-toe not registered")
 	}
 	if r.Meta().ID != "tic-tac-toe" {
 		t.Error("meta id mismatch")
 	}
-	all := rules.All()
+	all := spec.All()
 	found := false
 	for _, x := range all {
 		if x.Meta().ID == "tic-tac-toe" {

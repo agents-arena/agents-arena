@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 // State is the internal representation. "" denotes an empty cell.
@@ -28,12 +28,12 @@ var lines = [][3]int{
 type ttt struct{}
 
 // New returns a new tic-tac-toe Rules implementation.
-func New() rules.Rules {
+func New() spec.Rules {
 	return ttt{}
 }
 
-func (ttt) Meta() rules.GameMeta {
-	return rules.GameMeta{
+func (ttt) Meta() spec.GameMeta {
+	return spec.GameMeta{
 		ID:         "tic-tac-toe",
 		Name:       "Tic-Tac-Toe",
 		MinPlayers: 2,
@@ -205,5 +205,5 @@ func isFull(b [9]string) bool {
 }
 
 func init() {
-	rules.Register(New())
+	spec.Register(New())
 }

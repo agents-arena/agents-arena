@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/agents-arena/agents-arena/protocol"
-	"github.com/agents-arena/agents-arena/rules"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
-func newGame() rules.Rules {
-	return New().(rules.Rules)
+func newGame() spec.Rules {
+	return New().(spec.Rules)
 }
 
 func TestInit(t *testing.T) {
@@ -556,7 +556,7 @@ func TestSeventyFiveMoveAutoDraw(t *testing.T) {
 
 func TestHints(t *testing.T) {
 	g := newGame()
-	h := g.(rules.Hinter)
+	h := g.(spec.Hinter)
 
 	// No hints at start.
 	st := g.Init("").(state)
@@ -793,7 +793,7 @@ func TestDeserializeErrors(t *testing.T) {
 }
 
 func TestRegisterAndRegistry(t *testing.T) {
-	r, ok := rules.Get("chess")
+	r, ok := spec.Get("chess")
 	if !ok {
 		t.Fatal("chess not registered")
 	}
@@ -801,10 +801,10 @@ func TestRegisterAndRegistry(t *testing.T) {
 		t.Error("meta id mismatch")
 	}
 	// Chess implements Hinter.
-	if _, ok := r.(rules.Hinter); !ok {
-		t.Error("chess rules do not implement rules.Hinter")
+	if _, ok := r.(spec.Hinter); !ok {
+		t.Error("chess rules do not implement spec.Hinter")
 	}
-	all := rules.All()
+	all := spec.All()
 	found := false
 	for _, x := range all {
 		if x.Meta().ID == "chess" {

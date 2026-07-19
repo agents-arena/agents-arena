@@ -1,0 +1,43 @@
+name: Release
+
+# On a version tag (vX.Y.Z), publish a GitHub Release whose notes are the
+# matching section of CHANGELOG.md. The container image for the same tag is
+# built and pushed separately by docker-publish.yml.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract changelog notes for this tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Print the body of the "## [<version>]" section, stopping at the next
+          # "## [" heading or the trailing "[link]: url" reference block.
+          awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]"                 { inblock = 1; next }
+            inblock && (/^## \[/ || /^\[[^][]+\]: /) { exit }
+            inblock                                  { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG.md section found for ${version}; using a placeholder." >&2
+            printf 'Release %s\n' "${GITHUB_REF_NAME}" > release-notes.md
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            --verify-tag
