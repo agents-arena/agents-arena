@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { PropertyValues } from 'lit';
-import { arenaTokens, resetStyles, seatColorIndex } from '@agents-arena/ui';
+import { arenaTokens, resetStyles, arenaKeyframes, seatColorIndex } from '@agents-arena/ui';
 import type { MatchReportData, ReportMoveView, ReportPlayerView } from '@agents-arena/ui';
 import { getMatch, serverBase } from '../server.js';
 import type { ArchivedMatch, Comment, MatchReport } from '../types.js';
@@ -58,7 +58,9 @@ function toReportData(r: MatchReport): MatchReportData {
 }
 
 /**
- * Archived match detail: full match report plus a read-only comments list.
+ * Archived match detail on the dark "wood table" system: mono "← HISTORY"
+ * breadcrumb header with the room id, the full match report, and the
+ * read-only COMMENTS section beneath.
  */
 @customElement('arena-match-page')
 export class ArenaMatchPage extends LitElement {
@@ -75,207 +77,231 @@ export class ArenaMatchPage extends LitElement {
   static override styles = [
     resetStyles,
     arenaTokens,
+    arenaKeyframes,
     css`
       :host {
         display: block;
         min-height: 100vh;
-        background: var(--arena-bg);
+        background: var(--arena-bg-wash);
         color: var(--arena-text);
         font-family: var(--arena-font-sans);
       }
 
       .page {
-        max-width: 900px;
+        max-width: 980px;
         margin-inline: auto;
-        padding: clamp(var(--arena-space-4), 4vw, var(--arena-space-7));
-        display: flex;
-        flex-direction: column;
-        gap: var(--arena-space-5);
+        padding: clamp(16px, 3vw, 26px) clamp(14px, 4vw, 40px) 120px;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .page {
+          animation: aa-rise 0.45s ease both;
+        }
       }
 
+      /* Header ------------------------------------------------------------- */
       .header {
         display: flex;
         flex-wrap: wrap;
+        row-gap: 10px;
         align-items: center;
-        gap: var(--arena-space-3);
+        gap: 14px;
+        margin-bottom: 26px;
       }
       .back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--arena-text-muted);
-        text-decoration: none;
-        font-size: var(--arena-text-sm);
+        font-family: var(--arena-font-mono);
+        font-size: 13px;
         font-weight: 600;
+        color: var(--arena-text-label);
+        text-decoration: none;
+        white-space: nowrap;
       }
       .back:hover {
-        color: var(--arena-brand);
+        color: var(--arena-gold);
+      }
+      .back:focus-visible {
+        outline: none;
+        border-radius: 4px;
+        box-shadow: 0 0 0 3px var(--arena-ring);
       }
       .title {
         margin: 0;
-        font-size: var(--arena-text-xl);
-        font-weight: 780;
-        letter-spacing: -0.02em;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--arena-text-strong);
       }
       .room-id {
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-sm);
-        color: var(--arena-text-faint);
-      }
-
-      .section {
-        display: flex;
-        flex-direction: column;
-        gap: var(--arena-space-3);
-      }
-      .section-label {
-        font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-xs);
+        font-size: 12px;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
         color: var(--arena-text-faint);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      /* Comments — reused from watch.ts */
+      /* Comments ------------------------------------------------------------- */
+      .comments {
+        margin-top: 22px;
+      }
+      .comments-label {
+        margin: 0 0 8px;
+        font-family: var(--arena-font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--arena-text-faint);
+      }
+      .comments-empty {
+        margin: 0;
+        font-size: 12.5px;
+        font-style: italic;
+        color: var(--arena-text-faint);
+      }
       .comments-list {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        max-height: 400px;
+        max-height: 420px;
         overflow-y: auto;
-        padding: var(--arena-space-3);
         border: 1px solid var(--arena-border);
-        border-radius: var(--arena-radius-lg);
+        border-radius: 16px;
         background: var(--arena-surface);
+        scrollbar-width: thin;
       }
       .comment-item {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        gap: 4px;
-        padding: 2px 0;
-        font-size: var(--arena-text-xs);
+        gap: 4px 8px;
+        padding: 11px 16px;
+        font-size: 12.5px;
         line-height: 1.45;
-        border-bottom: 1px solid var(--arena-border);
-        padding-bottom: 6px;
       }
-      .comment-item:last-child {
-        border-bottom: none;
+      .comment-item + .comment-item {
+        border-top: 1px solid rgba(255, 255, 255, 0.045);
       }
       .comment-name {
         font-weight: 700;
-        color: var(--arena-text);
+        color: var(--arena-text-strong);
       }
       .comment-seat {
-        padding: 0 4px;
-        border-radius: 2px;
+        padding: 0 5px;
+        border-radius: 4px;
         background: color-mix(in srgb, var(--seat) 20%, transparent);
         color: color-mix(in srgb, var(--seat) 74%, var(--arena-text));
         font-family: var(--arena-font-mono);
-        font-size: 0.82em;
+        font-size: 10px;
         font-weight: 700;
+        text-transform: uppercase;
       }
       .comment-time {
         font-family: var(--arena-font-mono);
-        font-size: 0.82em;
+        font-size: 10px;
         color: var(--arena-text-faint);
         white-space: nowrap;
       }
       .comment-text {
-        color: var(--arena-text-muted);
-        word-break: break-word;
         width: 100%;
         margin-top: 2px;
-      }
-      .comments-empty {
-        font-size: var(--arena-text-xs);
-        color: var(--arena-text-faint);
-        font-style: italic;
-        padding: var(--arena-space-2) 0;
+        color: var(--arena-text-muted);
+        word-break: break-word;
       }
 
-      /* Centered states — match watch.ts pattern */
+      /* Centered states -------------------------------------------------------- */
       .centered {
         display: grid;
         place-items: center;
-        min-height: 100vh;
-        padding: var(--arena-space-5);
-        background: var(--arena-bg);
+        min-height: 92vh;
+        padding: 40px;
       }
       .state-card {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--arena-space-4);
-        max-width: 480px;
-        padding: clamp(var(--arena-space-5), 5vw, var(--arena-space-7));
+        gap: 14px;
+        max-width: 520px;
+        padding: clamp(24px, 6vw, 44px) clamp(20px, 7vw, 56px);
         text-align: center;
-        border: 1px solid var(--arena-border);
-        border-radius: var(--arena-radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 22px;
         background: var(--arena-surface);
-        box-shadow: var(--arena-shadow-2);
+        box-shadow: var(--arena-shadow-3);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .state-card {
+          animation: aa-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+        }
       }
       .state-eyebrow {
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-xs);
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--arena-text-muted);
+        letter-spacing: 0.22em;
+        color: var(--arena-text-label);
       }
       .state-title {
         margin: 0;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 780;
+        font-size: clamp(1.4rem, 4vw, 1.9rem);
+        font-weight: 800;
         letter-spacing: -0.02em;
+        color: var(--arena-text-strong);
       }
       .state-body {
         margin: 0;
         color: var(--arena-text-muted);
+        font-size: 14px;
         line-height: 1.55;
       }
       .state-id {
         font-family: var(--arena-font-mono);
         color: var(--arena-text);
+        text-transform: none;
+        letter-spacing: normal;
       }
       .state-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--arena-space-3);
+        gap: 12px;
         justify-content: center;
       }
       .btn {
         display: inline-flex;
         align-items: center;
-        gap: var(--arena-space-2);
+        justify-content: center;
+        gap: 8px;
         min-height: 44px;
-        padding: 0 var(--arena-space-4);
-        border-radius: var(--arena-radius-md);
-        border: 1px solid transparent;
+        padding: 9px 16px;
+        border-radius: 9px;
+        border: 1px solid var(--arena-border-strong);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--arena-text);
         font: inherit;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
         text-decoration: none;
+        transition: background 140ms ease;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
       .btn:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px var(--arena-ring);
       }
       .btn.primary {
-        background: var(--arena-brand);
+        border-color: transparent;
+        background: linear-gradient(180deg, var(--arena-gold-a), var(--arena-gold-b));
         color: var(--arena-brand-ink);
+        font-weight: 700;
+        box-shadow:
+          0 6px 18px rgba(232, 184, 75, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
       .btn.primary:hover {
-        filter: brightness(1.07);
-      }
-      .btn.ghost {
-        background: var(--arena-surface);
-        border-color: var(--arena-border-strong);
-        color: var(--arena-text);
-      }
-      .btn.ghost:hover {
-        border-color: var(--arena-brand);
+        filter: brightness(1.05);
       }
     `,
   ];
@@ -344,7 +370,7 @@ export class ArenaMatchPage extends LitElement {
             <button class="btn primary" type="button" @click=${() => void this._load()}>
               Try again
             </button>
-            <a class="btn ghost" href=${archiveHash()}>Back to history</a>
+            <a class="btn" href=${archiveHash()}>Back to history</a>
           </div>
         </div>
       </div>
@@ -356,17 +382,15 @@ export class ArenaMatchPage extends LitElement {
     return html`
       <div class="page">
         <header class="header">
-          <a class="back" href=${archiveHash()} aria-label="Back to match history">← History</a>
+          <a class="back" href=${archiveHash()} aria-label="Back to match history">← HISTORY</a>
           <h1 class="title">Match report</h1>
           <span class="room-id">${this.roomId}</span>
         </header>
 
-        <section class="section">
-          <arena-match-report .report=${reportData}></arena-match-report>
-        </section>
+        <arena-match-report .report=${reportData}></arena-match-report>
 
-        <section class="section" aria-label="Comments">
-          <span class="section-label">Comments</span>
+        <section class="comments" aria-label="Comments">
+          <h2 class="comments-label">Comments</h2>
           ${this._renderComments(data.comments)}
         </section>
       </div>

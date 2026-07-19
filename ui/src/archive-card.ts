@@ -1,8 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { arenaTokens, resetStyles, seatColorIndex } from './theme.js';
+import { arenaTokens, resetStyles, arenaKeyframes, seatColorIndex } from './theme.js';
 import './reasoning-badge.js';
 import './method-chip.js';
+import './agent-avatar.js';
 import type { ReasoningMode } from './reasoning-badge.js';
 
 /** One player summary on an archive card. */
@@ -11,6 +12,10 @@ export interface MatchSummaryPlayer {
   name: string;
   model?: string;
   method?: string;
+  /** Moves this player made (shown as "6 moves" on the row when present). */
+  moves?: number;
+  /** Average think time in ms (shown as "51.4s avg" on the row when present). */
+  avgThinkMs?: number;
 }
 
 /**
@@ -47,6 +52,14 @@ function seatVar(seat: string): string {
   return `--seat: var(--arena-seat-${seatColorIndex(seat)})`;
 }
 
+/** Physical WHITE/BLACK chips for chess seats; any other seat gets its accent hue. */
+function seatChipClass(seat: string): string {
+  const k = seat.trim().toLowerCase();
+  if (k === 'white' || k === 'w') return 'chip white';
+  if (k === 'black' || k === 'b') return 'chip black';
+  return 'chip accent';
+}
+
 /** Format a duration from ms: "4m 12s", "45s", "1h 02m". */
 function formatDurationMs(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return '—';
@@ -57,6 +70,14 @@ function formatDurationMs(ms: number): string {
   const s = totalSec % 60;
   if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
   return `${m}m ${String(s).padStart(2, '0')}s`;
+}
+
+/** Format a per-player avg think time compactly: "850ms", "51.4s", "1m 03s". */
+function formatThink(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return '—';
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
+  return formatDurationMs(ms);
 }
 
 /** Parse endedAt into epoch ms, or null if unparseable. */
@@ -86,23 +107,30 @@ function relativeEnded(endedAt: string | number, now = Date.now()): string {
 /** Simple glyph for a known game kind. */
 function gameGlyph(game: string): string {
   const g = game.toLowerCase();
-  if (g.includes('chess')) return '♟';
+  if (g.includes('chess')) return '♞';
   if (g.includes('tic')) return '✕';
   return '◈';
 }
 
 /**
- * Presentational card for one match-history summary. Whole card is a button;
- * click / Enter / Space dispatches `select` with `{ room }`.
+ * Presentational card for one match-history summary — the dark "wood table"
+ * history card: game glyph + room id + badge header, winner/draw headline,
+ * per-player rows (seat chip, robot avatar, name, per-player stats), and a
+ * mono stats footer. Whole card is a button; click / Enter / Space dispatches
+ * `select` with `{ room }`. Set `live` for the animated gold glow-ring +
+ * LIVE badge variant.
  */
 @customElement('arena-archive-card')
 export class ArenaArchiveCard extends LitElement {
   /** Summary to render. */
   @property({ attribute: false }) summary: MatchSummary | null = null;
+  /** Live-match visual variant: animated gold glow ring + LIVE badge. */
+  @property({ type: Boolean, reflect: true }) live = false;
 
   static override styles = [
     resetStyles,
     arenaTokens,
+    arenaKeyframes,
     css`
       :host {
         display: block;
@@ -113,128 +141,205 @@ export class ArenaArchiveCard extends LitElement {
       .card {
         display: flex;
         flex-direction: column;
-        gap: var(--arena-space-3);
         width: 100%;
-        padding: var(--arena-space-3) var(--arena-space-4);
+        height: 100%;
+        padding: 18px;
         border: 1px solid var(--arena-border);
-        border-radius: var(--arena-radius-lg);
+        border-radius: 16px;
         background: var(--arena-surface);
-        box-shadow: var(--arena-shadow-1);
         color: inherit;
         font: inherit;
         text-align: left;
         cursor: pointer;
         transition:
-          border-color 140ms ease,
-          box-shadow 140ms ease,
-          filter 140ms ease;
+          transform 0.2s ease,
+          border-color 0.2s ease;
       }
       .card:hover {
-        border-color: var(--arena-border-strong);
-        filter: brightness(1.02);
+        border-color: rgba(232, 184, 75, 0.35);
       }
       .card:focus-visible {
         outline: none;
-        border-color: var(--arena-brand);
+        border-color: var(--arena-gold);
         box-shadow: 0 0 0 3px var(--arena-ring);
       }
       .card:active {
         filter: brightness(0.98);
       }
 
-      .row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--arena-space-2);
+      /* Live variant: ember border + gold glow ring (static when motion is reduced). */
+      .card.live {
+        border-color: rgba(255, 90, 82, 0.4);
+        box-shadow:
+          0 0 0 2px rgba(232, 184, 75, 0.4),
+          0 0 18px rgba(232, 184, 75, 0.2);
       }
-      .row.between {
-        justify-content: space-between;
+      @media (prefers-reduced-motion: no-preference) {
+        .card:hover {
+          transform: translateY(-3px);
+        }
+        .card.live {
+          animation: aa-glowring 2.2s ease infinite;
+        }
       }
 
+      /* Header: glyph, room id, badge pinned right ------------------------- */
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        min-width: 0;
+      }
       .game-glyph {
+        flex: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: var(--arena-radius-sm);
-        background: var(--arena-surface-2);
-        border: 1px solid var(--arena-border);
-        font-size: 14px;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 15px;
         line-height: 1;
+        color: #f2e7d3;
       }
-
+      .game-glyph.ttt {
+        font-family: var(--arena-font-mono);
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--arena-violet);
+      }
       .room {
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-sm);
-        color: var(--arena-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--arena-text-dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .badge-slot {
+        margin-left: auto;
+        flex: none;
+        display: inline-flex;
+      }
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 8px;
+        border: 1px solid rgba(255, 107, 96, 0.4);
+        border-radius: var(--arena-radius-pill);
+        color: var(--arena-live-2);
+        font-family: var(--arena-font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        white-space: nowrap;
+      }
+      .live-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--arena-live);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .live-dot {
+          animation: aa-pulse 1.4s ease infinite;
+        }
       }
 
+      /* Headline ------------------------------------------------------------ */
       .headline {
-        margin: 0;
-        font-size: var(--arena-text-lg);
+        margin: 0 0 10px;
+        font-size: 19px;
         font-weight: 800;
         letter-spacing: -0.01em;
+        color: var(--arena-text-strong);
       }
       .headline .who {
-        color: color-mix(in srgb, var(--seat) 78%, var(--arena-text));
-      }
-      .headline.draw {
-        color: var(--arena-text-muted);
+        color: var(--seat, var(--arena-text-strong));
       }
 
+      /* Player rows ----------------------------------------------------------
+       * Seat chips: physical WHITE/BLACK for chess; solid seat accent for
+       * everything else (X violet, O rose, …).
+       */
       .players {
         display: flex;
         flex-direction: column;
-        gap: var(--arena-space-2);
+        gap: 5px;
+        margin-bottom: 14px;
       }
       .player {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
-        gap: var(--arena-space-2);
+        gap: 8px;
         min-width: 0;
       }
-      .seat {
-        display: inline-block;
-        padding: 1px 7px;
-        border-radius: var(--arena-radius-sm);
-        background: color-mix(in srgb, var(--seat) 16%, transparent);
-        color: color-mix(in srgb, var(--seat) 74%, var(--arena-text));
-        font-weight: 700;
+      .chip {
+        flex: none;
+        display: inline-flex;
+        padding: 2px 7px;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        font-family: var(--arena-font-mono);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
-        font-size: var(--arena-text-xs);
         white-space: nowrap;
       }
-      .pname {
-        font-weight: 600;
-        font-size: var(--arena-text-sm);
+      .chip.white {
+        background: var(--arena-chip-white-bg);
+        color: var(--arena-chip-white-ink);
       }
-      .pmodel {
+      .chip.black {
+        background: var(--arena-chip-black-bg);
+        color: var(--arena-chip-black-ink);
+        border-color: var(--arena-border-strong);
+      }
+      .chip.accent {
+        background: var(--seat, var(--arena-text-faint));
+        color: #0e0d17;
+      }
+      .avatar {
+        flex: none;
+        line-height: 0;
+      }
+      .pname {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #d9d2c4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pstat {
+        flex: none;
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-xs);
-        color: var(--arena-text-muted);
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--arena-text-faint);
+        white-space: nowrap;
       }
 
+      /* Stats footer ---------------------------------------------------------- */
       .stats {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: var(--arena-space-1) var(--arena-space-3);
-        font-size: var(--arena-text-sm);
-        color: var(--arena-text-muted);
-      }
-      .stats .num {
-        font-variant-numeric: tabular-nums;
+        gap: 4px 12px;
+        margin-top: auto;
         font-family: var(--arena-font-mono);
-        color: var(--arena-text);
+        font-size: 11px;
         font-weight: 600;
+        color: var(--arena-text-label);
       }
-      .rel {
+      .stats .rel {
+        margin-left: auto;
         color: var(--arena-text-faint);
-        font-size: var(--arena-text-xs);
       }
 
       .empty {
@@ -243,12 +348,6 @@ export class ArenaArchiveCard extends LitElement {
         text-align: center;
         color: var(--arena-text-muted);
         font-size: var(--arena-text-sm);
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .card {
-          transition: none;
-        }
       }
     `,
   ];
@@ -268,7 +367,7 @@ export class ArenaArchiveCard extends LitElement {
   private _headline(summary: MatchSummary) {
     const winner = summary.winner;
     if (winner == null || winner === '') {
-      return html`<h3 class="headline draw">Draw</h3>`;
+      return html`<h3 class="headline">Draw</h3>`;
     }
     // Prefer player name if winner matches a seat; otherwise show raw winner.
     const bySeat = summary.players.find((p) => p.seat === winner);
@@ -281,6 +380,23 @@ export class ArenaArchiveCard extends LitElement {
     </h3>`;
   }
 
+  private _playerRow(p: MatchSummaryPlayer) {
+    const bits: string[] = [];
+    if (p.moves !== undefined) bits.push(`${p.moves} moves`);
+    if (p.avgThinkMs !== undefined) bits.push(`${formatThink(p.avgThinkMs)} avg`);
+    const stat = bits.join(' · ');
+    return html`
+      <div class="player">
+        <span class="${seatChipClass(p.seat)}" style=${seatVar(p.seat)}>${p.seat}</span>
+        <span class="avatar">
+          <arena-agent-avatar seat=${p.seat} name=${p.name} .size=${22}></arena-agent-avatar>
+        </span>
+        <span class="pname" title=${p.model ?? ''}>${p.name}</span>
+        ${stat ? html`<span class="pstat">${stat}</span>` : nothing}
+      </div>
+    `;
+  }
+
   protected override render() {
     const summary = this.summary;
     if (!summary) {
@@ -290,53 +406,40 @@ export class ArenaArchiveCard extends LitElement {
     const durationMs =
       summary.durationMs ??
       (summary.durationSec !== undefined ? summary.durationSec * 1000 : undefined);
-    const duration =
-      durationMs !== undefined ? formatDurationMs(durationMs) : '—';
+    const duration = durationMs !== undefined ? formatDurationMs(durationMs) : '—';
     const rel = relativeEnded(summary.endedAt);
     const reasoning =
-      summary.reasoning === 'self' || summary.reasoning === 'open'
-        ? summary.reasoning
-        : null;
+      summary.reasoning === 'self' || summary.reasoning === 'open' ? summary.reasoning : null;
+    const glyphClass = summary.game.toLowerCase().includes('tic') ? 'game-glyph ttt' : 'game-glyph';
 
     return html`
       <button
         type="button"
-        class="card"
+        class="card ${this.live ? 'live' : ''}"
         aria-label=${`Open match ${summary.room}`}
         @click=${this._onSelect}
       >
-        <div class="row between">
-          <div class="row">
-            <span class="game-glyph" aria-hidden="true">${gameGlyph(summary.game)}</span>
-            <span class="room">${summary.room}</span>
-            ${reasoning
-              ? html`<arena-reasoning-badge mode=${reasoning}></arena-reasoning-badge>`
-              : nothing}
-          </div>
-          ${rel ? html`<span class="rel">${rel}</span>` : nothing}
+        <div class="top">
+          <span class=${glyphClass} aria-hidden="true">${gameGlyph(summary.game)}</span>
+          <span class="room">${summary.room}</span>
+          <span class="badge-slot">
+            ${this.live
+              ? html`<span class="live-badge"><span class="live-dot"></span>LIVE</span>`
+              : reasoning
+                ? html`<arena-reasoning-badge mode=${reasoning}></arena-reasoning-badge>`
+                : nothing}
+          </span>
         </div>
 
         ${this._headline(summary)}
 
-        <div class="players">
-          ${summary.players.map(
-            (p) => html`
-              <div class="player">
-                <span class="seat" style=${seatVar(p.seat)}>${p.seat}</span>
-                <span class="pname">${p.name}</span>
-                ${p.model ? html`<span class="pmodel">${p.model}</span>` : nothing}
-                ${p.method
-                  ? html`<arena-method-chip method=${p.method}></arena-method-chip>`
-                  : nothing}
-              </div>
-            `,
-          )}
-        </div>
+        <div class="players">${summary.players.map((p) => this._playerRow(p))}</div>
 
         <div class="stats">
-          <span><span class="num">${duration}</span></span>
-          <span><span class="num">${summary.moveCount}</span> moves</span>
-          <span><span class="num">${summary.commentCount}</span> comments</span>
+          <span>${duration}</span>
+          <span>${summary.moveCount} moves</span>
+          <span>${summary.commentCount} comments</span>
+          ${rel ? html`<span class="rel">${rel}</span>` : nothing}
         </div>
       </button>
     `;

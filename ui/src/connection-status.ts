@@ -30,23 +30,25 @@ export class ArenaConnectionStatus extends LitElement {
     css`
       :host {
         display: inline-block;
-        font-family: var(--arena-font-sans);
+        font-family: var(--arena-font-mono);
       }
 
       .status {
         --tone: var(--arena-text-faint);
         display: inline-flex;
         align-items: center;
-        gap: var(--arena-space-2);
-        padding: 5px var(--arena-space-3);
-        border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--arena-border));
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid color-mix(in srgb, var(--tone) 32%, transparent);
         border-radius: var(--arena-radius-pill);
-        background: color-mix(in srgb, var(--tone) 10%, var(--arena-surface));
-        font-size: var(--arena-text-sm);
+        background: color-mix(in srgb, var(--tone) 8%, transparent);
+        font-size: 10px;
         line-height: 1.2;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
       }
       .status.connecting {
-        --tone: var(--arena-brand);
+        --tone: var(--arena-gold);
       }
       .status.connected {
         --tone: var(--arena-success);
@@ -60,21 +62,22 @@ export class ArenaConnectionStatus extends LitElement {
 
       .dot {
         flex: 0 0 auto;
-        width: 9px;
-        height: 9px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: var(--tone);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 22%, transparent);
       }
 
       .label {
-        font-weight: 600;
-        color: var(--arena-text);
+        font-weight: 700;
+        color: color-mix(in srgb, var(--tone) 55%, var(--arena-text-bright));
       }
 
       .detail {
         color: var(--arena-text-muted);
-        font-size: var(--arena-text-xs);
+        font-size: 10px;
+        text-transform: none;
+        letter-spacing: 0.02em;
       }
 
       @media (prefers-reduced-motion: no-preference) {

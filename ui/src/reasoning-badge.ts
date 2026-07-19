@@ -17,8 +17,8 @@ const TITLES: Record<ReasoningMode, string> = {
 
 /**
  * Compact pill showing a room's declared reasoning mode:
- *   self → "Self-reason" (brain, indigo/brand accent)
- *   open → "Open tools"  (wrench, amber accent)
+ *   self → "✦ Self-reason" (violet accent)
+ *   open → "⚒ Open tools"  (amber accent)
  */
 @customElement('arena-reasoning-badge')
 export class ArenaReasoningBadge extends LitElement {
@@ -32,24 +32,24 @@ export class ArenaReasoningBadge extends LitElement {
       :host {
         display: inline-flex;
         vertical-align: middle;
-        font-family: var(--arena-font-sans);
+        font-family: var(--arena-font-mono);
       }
 
       .badge {
-        --tone: var(--arena-brand);
+        --tone: var(--arena-violet);
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        padding: 2px 9px;
-        border: 1px solid color-mix(in srgb, var(--tone) 32%, var(--arena-border));
+        padding: 5px 10px;
+        border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
         border-radius: var(--arena-radius-pill);
-        background: color-mix(in srgb, var(--tone) 12%, var(--arena-surface));
-        color: color-mix(in srgb, var(--tone) 70%, var(--arena-text));
-        font-size: var(--arena-text-xs);
+        background: color-mix(in srgb, var(--tone) 8%, transparent);
+        color: color-mix(in srgb, var(--tone) 55%, var(--arena-text-bright));
+        font-size: 10px;
         font-weight: 700;
         line-height: 1.4;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.12em;
         white-space: nowrap;
       }
       .badge.open {
@@ -57,7 +57,7 @@ export class ArenaReasoningBadge extends LitElement {
       }
 
       .glyph {
-        font-size: 12px;
+        font-size: 11px;
         line-height: 1;
         font-style: normal;
       }
@@ -66,7 +66,7 @@ export class ArenaReasoningBadge extends LitElement {
 
   protected override render() {
     const mode: ReasoningMode = this.mode === 'open' ? 'open' : 'self';
-    const glyph = mode === 'self' ? '🧠' : '🔧';
+    const glyph = mode === 'self' ? '✦' : '⚒';
     return html`
       <span class="badge ${mode}" title=${TITLES[mode]}>
         <span class="glyph" aria-hidden="true">${glyph}</span>

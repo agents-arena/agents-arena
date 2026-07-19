@@ -1,10 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { arenaTokens, resetStyles } from '@agents-arena/ui';
+import { arenaTokens, resetStyles, arenaKeyframes } from '@agents-arena/ui';
 import type { LeaderRow as UiLeaderRow } from '@agents-arena/ui';
 import { getLeaderboard, serverBase } from '../server.js';
 import type { LeaderRow as ServerLeaderRow } from '../types.js';
-import { landingHash } from '../router.js';
+import { landingHash, archiveHash } from '../router.js';
 
 /** Map server leaderboard rows onto the arena-ui LeaderRow shape. */
 function toUiRows(rows: ServerLeaderRow[]): UiLeaderRow[] {
@@ -25,8 +25,8 @@ function toUiRows(rows: ServerLeaderRow[]): UiLeaderRow[] {
 }
 
 /**
- * Leaderboard page: thin wrapper that fetches standings and renders
- * `<arena-leaderboard-table>`.
+ * Leaderboard page on the dark "wood table" system: mono "← ARENA" breadcrumb
+ * header with a Match-history cross-link, wrapping the standings grid.
  */
 @customElement('arena-leaderboard-page')
 export class ArenaLeaderboardPage extends LitElement {
@@ -40,124 +40,161 @@ export class ArenaLeaderboardPage extends LitElement {
   static override styles = [
     resetStyles,
     arenaTokens,
+    arenaKeyframes,
     css`
       :host {
         display: block;
         min-height: 100vh;
-        background: var(--arena-bg);
+        background: var(--arena-bg-wash);
         color: var(--arena-text);
         font-family: var(--arena-font-sans);
       }
 
       .page {
-        max-width: 960px;
+        max-width: 980px;
         margin-inline: auto;
-        padding: clamp(var(--arena-space-4), 4vw, var(--arena-space-7));
-        display: flex;
-        flex-direction: column;
-        gap: var(--arena-space-5);
+        padding: clamp(16px, 3vw, 26px) clamp(14px, 4vw, 40px) 120px;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .page {
+          animation: aa-rise 0.45s ease both;
+        }
       }
 
+      /* Header ------------------------------------------------------------- */
       .header {
         display: flex;
         flex-wrap: wrap;
+        row-gap: 10px;
         align-items: center;
-        gap: var(--arena-space-3);
+        gap: 14px;
+        margin-bottom: 26px;
       }
       .back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--arena-text-muted);
-        text-decoration: none;
-        font-size: var(--arena-text-sm);
+        font-family: var(--arena-font-mono);
+        font-size: 13px;
         font-weight: 600;
+        color: var(--arena-text-label);
+        text-decoration: none;
+        white-space: nowrap;
       }
       .back:hover {
-        color: var(--arena-brand);
+        color: var(--arena-gold);
       }
       .title {
         margin: 0;
-        font-size: var(--arena-text-xl);
-        font-weight: 780;
-        letter-spacing: -0.02em;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--arena-text-strong);
+      }
+      .nav-link {
+        margin-left: auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--arena-text-dim);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .nav-link:hover {
+        color: var(--arena-gold);
+      }
+      .back:focus-visible,
+      .nav-link:focus-visible {
+        outline: none;
+        border-radius: 4px;
+        box-shadow: 0 0 0 3px var(--arena-ring);
       }
 
+      /* Centered states ------------------------------------------------------ */
       .centered {
         display: grid;
         place-items: center;
         min-height: 40vh;
-        padding: var(--arena-space-5);
+        padding: 24px 0;
       }
       .state-card {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--arena-space-4);
-        max-width: 480px;
-        padding: clamp(var(--arena-space-5), 5vw, var(--arena-space-7));
+        gap: 14px;
+        max-width: 520px;
+        padding: clamp(24px, 6vw, 44px) clamp(20px, 7vw, 56px);
         text-align: center;
-        border: 1px solid var(--arena-border);
-        border-radius: var(--arena-radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 22px;
         background: var(--arena-surface);
-        box-shadow: var(--arena-shadow-2);
+        box-shadow: var(--arena-shadow-3);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .state-card {
+          animation: aa-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+        }
       }
       .state-eyebrow {
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-xs);
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--arena-text-muted);
+        letter-spacing: 0.22em;
+        color: var(--arena-text-label);
       }
       .state-title {
         margin: 0;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 780;
+        font-size: clamp(1.4rem, 4vw, 1.9rem);
+        font-weight: 800;
         letter-spacing: -0.02em;
+        color: var(--arena-text-strong);
       }
       .state-body {
         margin: 0;
         color: var(--arena-text-muted);
+        font-size: 14px;
         line-height: 1.55;
       }
       .state-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--arena-space-3);
+        gap: 12px;
         justify-content: center;
       }
       .btn {
         display: inline-flex;
         align-items: center;
-        gap: var(--arena-space-2);
+        justify-content: center;
+        gap: 8px;
         min-height: 44px;
-        padding: 0 var(--arena-space-4);
-        border-radius: var(--arena-radius-md);
-        border: 1px solid transparent;
+        padding: 9px 16px;
+        border-radius: 9px;
+        border: 1px solid var(--arena-border-strong);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--arena-text);
         font: inherit;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
         text-decoration: none;
+        transition: background 140ms ease;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
       .btn:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px var(--arena-ring);
       }
       .btn.primary {
-        background: var(--arena-brand);
+        border-color: transparent;
+        background: linear-gradient(180deg, var(--arena-gold-a), var(--arena-gold-b));
         color: var(--arena-brand-ink);
+        font-weight: 700;
+        box-shadow:
+          0 6px 18px rgba(232, 184, 75, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
       .btn.primary:hover {
-        filter: brightness(1.07);
-      }
-      .btn.ghost {
-        background: var(--arena-surface);
-        border-color: var(--arena-border-strong);
-        color: var(--arena-text);
-      }
-      .btn.ghost:hover {
-        border-color: var(--arena-brand);
+        filter: brightness(1.05);
       }
     `,
   ];
@@ -190,8 +227,9 @@ export class ArenaLeaderboardPage extends LitElement {
     return html`
       <div class="page">
         <header class="header">
-          <a class="back" href=${landingHash()} aria-label="Back to start">← Arena</a>
+          <a class="back" href=${landingHash()} aria-label="Back to start">← ARENA</a>
           <h1 class="title">Leaderboard</h1>
+          <a class="nav-link" href=${archiveHash()}>Match history</a>
         </header>
         ${this._renderBody()}
       </div>
@@ -222,7 +260,7 @@ export class ArenaLeaderboardPage extends LitElement {
               <button class="btn primary" type="button" @click=${() => void this._load()}>
                 Try again
               </button>
-              <a class="btn ghost" href=${landingHash()}>Back to start</a>
+              <a class="btn" href=${landingHash()}>Back to start</a>
             </div>
           </div>
         </div>

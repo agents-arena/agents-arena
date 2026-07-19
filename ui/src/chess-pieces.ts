@@ -1,8 +1,10 @@
 // The Arena chess piece set — six original, geometric silhouettes drawn for
 // this board: single-weight outlines, rounded joins, and one shared plinth so
-// the figures read as a family. Colors come from CSS custom properties set by
-// the board (`--piece-fill` / `--piece-stroke`), so the same paths adapt to
-// light and dark themes without duplicate artwork.
+// the figures read as a family. The set is skinned as carved wood: cream
+// figures with a walnut edge for white, near-black figures with a pale carved
+// edge for black. Colors come from CSS custom properties set by the board
+// (`--piece-fill` / `--piece-stroke`); the fallbacks below are the white wood
+// colors so a piece never renders unstyled.
 import { svg } from 'lit';
 import type { TemplateResult } from 'lit';
 
@@ -14,8 +16,8 @@ const STROKE = 1.5;
 const body = (d: string) => svg`
   <path
     d=${d}
-    fill="var(--piece-fill)"
-    stroke="var(--piece-stroke)"
+    fill="var(--piece-fill, #fdf5e4)"
+    stroke="var(--piece-stroke, #6b4a26)"
     stroke-width=${STROKE}
     stroke-linejoin="round"
     stroke-linecap="round"
@@ -26,7 +28,7 @@ const detail = (d: string) => svg`
   <path
     d=${d}
     fill="none"
-    stroke="var(--piece-stroke)"
+    stroke="var(--piece-stroke, #6b4a26)"
     stroke-width=${STROKE}
     stroke-linejoin="round"
     stroke-linecap="round"
@@ -36,8 +38,8 @@ const detail = (d: string) => svg`
 const plinth = (x: number, w: number) => svg`
   <rect
     x=${x} y="35.5" width=${w} height="4.5" rx="2"
-    fill="var(--piece-fill)"
-    stroke="var(--piece-stroke)"
+    fill="var(--piece-fill, #fdf5e4)"
+    stroke="var(--piece-stroke, #6b4a26)"
     stroke-width=${STROKE}
   />`;
 
@@ -60,7 +62,7 @@ const PIECES: Record<PieceKey, TemplateResult> = {
     ${body(
       'M14.8 35.5 C14.8 28 16.2 23.3 19.6 20.2 C18.2 19.1 17.6 17.3 18 15.4 L15.9 16.2 C15 15.1 15.2 13.4 16.4 12.2 L20.6 8.4 C21.1 7.9 21.9 7.9 22.4 8.4 L22.9 9 C27.8 9.6 31.7 13.7 32.1 19.2 C32.4 22.8 31.2 26.4 29.7 28.9 C28.8 30.4 28.3 32.6 28.3 35.5 Z',
     )}
-    <circle cx="19.6" cy="13.4" r="1" fill="var(--piece-stroke)" />
+    <circle cx="19.6" cy="13.4" r="1" fill="var(--piece-stroke, #6b4a26)" />
   `,
   b: svg`
     ${body('M22.5 7.2 a2.6 2.6 0 1 1 -0.01 0 Z')}
@@ -72,9 +74,9 @@ const PIECES: Record<PieceKey, TemplateResult> = {
     ${plinth(12, 21)}
   `,
   q: svg`
-    <circle cx="14" cy="12.6" r="2" fill="var(--piece-fill)" stroke="var(--piece-stroke)" stroke-width=${STROKE} />
-    <circle cx="22.5" cy="10.6" r="2.2" fill="var(--piece-fill)" stroke="var(--piece-stroke)" stroke-width=${STROKE} />
-    <circle cx="31" cy="12.6" r="2" fill="var(--piece-fill)" stroke="var(--piece-stroke)" stroke-width=${STROKE} />
+    <circle cx="14" cy="12.6" r="2" fill="var(--piece-fill, #fdf5e4)" stroke="var(--piece-stroke, #6b4a26)" stroke-width=${STROKE} />
+    <circle cx="22.5" cy="10.6" r="2.2" fill="var(--piece-fill, #fdf5e4)" stroke="var(--piece-stroke, #6b4a26)" stroke-width=${STROKE} />
+    <circle cx="31" cy="12.6" r="2" fill="var(--piece-fill, #fdf5e4)" stroke="var(--piece-stroke, #6b4a26)" stroke-width=${STROKE} />
     ${body(
       'M14.3 15 L18.8 22.6 L22.5 13.4 L26.2 22.6 L30.7 15 L29 26 L16 26 Z',
     )}

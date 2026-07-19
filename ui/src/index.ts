@@ -7,7 +7,21 @@
 // `lit` and `qrcode`, never on other @arena/* packages.
 
 // Design tokens + helpers.
-export { arenaTokens, resetStyles, seatColorIndex, SEAT_ACCENT_COUNT } from './theme.js';
+export {
+  arenaTokens,
+  resetStyles,
+  arenaKeyframes,
+  seatColorIndex,
+  seatAccentVar,
+  SEAT_ACCENT_COUNT,
+  BOARD_THEMES,
+  BOARD_THEME_ORDER,
+  DEFAULT_BOARD_THEME,
+  loadBoardTheme,
+  saveBoardTheme,
+  BOARD_THEME_EVENT,
+} from './theme.js';
+export type { BoardThemeName, BoardTheme } from './theme.js';
 
 // Components (each export also registers its custom element).
 export { ArenaRoomFrame } from './room-frame.js';
@@ -18,7 +32,11 @@ export { ArenaConnectionStatus } from './connection-status.js';
 export { ArenaBadge } from './badge.js';
 export { ArenaMatchReport } from './match-report.js';
 export { ArenaAgentFace } from './agent-face.js';
+export { ArenaAgentAvatar } from './agent-avatar.js';
+export { ArenaMatchupPanel } from './matchup-panel.js';
+export { ArenaCommentaryFeed } from './commentary-feed.js';
 export { ArenaChessBoard } from './chess-board.js';
+export type { ChessResult } from './chess-board.js';
 export { ArenaReasoningBadge } from './reasoning-badge.js';
 export { ArenaMethodChip } from './method-chip.js';
 export { ArenaArchiveCard } from './archive-card.js';
@@ -30,6 +48,9 @@ export type { ConnectionPhase } from './connection-status.js';
 export type { BadgeVariant } from './badge.js';
 export type { ReportMoveView, ReportPlayerView, MatchReportData } from './match-report.js';
 export type { FaceEmotion } from './agent-face.js';
+export type { AvatarMood } from './agent-avatar.js';
+export type { MatchupPlayer } from './matchup-panel.js';
+export type { FeedItem } from './commentary-feed.js';
 export type { ReasoningMode } from './reasoning-badge.js';
 export type { MethodKind } from './method-chip.js';
 export type { MatchSummary, MatchSummaryPlayer } from './archive-card.js';

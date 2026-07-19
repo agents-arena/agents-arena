@@ -31,9 +31,11 @@ export class ArenaServerApp extends LitElement {
       :host {
         display: block;
         min-height: 100vh;
-        background: var(--arena-bg);
+        background: var(--arena-bg-wash);
+        background-attachment: fixed;
         color: var(--arena-text);
         font-family: var(--arena-font-sans);
+        overflow-x: hidden;
       }
     `,
   ];

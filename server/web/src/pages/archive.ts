@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { arenaTokens, resetStyles } from '@agents-arena/ui';
+import { arenaTokens, resetStyles, arenaKeyframes } from '@agents-arena/ui';
 import type { MatchSummary as UiMatchSummary, MatchSummaryPlayer } from '@agents-arena/ui';
 import { listMatches, serverBase } from '../server.js';
 import type { MatchSummary as ServerMatchSummary } from '../types.js';
@@ -22,6 +22,8 @@ function toUiSummary(m: ServerMatchSummary): UiMatchSummary {
     name: p.name || p.seat,
     model: p.model,
     method: p.method,
+    moves: p.moves,
+    avgThinkMs: p.avgThinkMs,
   }));
   return {
     room: m.room,
@@ -37,8 +39,8 @@ function toUiSummary(m: ServerMatchSummary): UiMatchSummary {
 }
 
 /**
- * Match history page: lists archived matches with a game filter, pagination,
- * and navigation into a single archived-match view.
+ * Match history page on the dark "wood table" system: mono "← ARENA" breadcrumb
+ * header, gold-pill game filters, and a responsive grid of archive cards.
  */
 @customElement('arena-archive-page')
 export class ArenaArchivePage extends LitElement {
@@ -56,125 +58,144 @@ export class ArenaArchivePage extends LitElement {
   static override styles = [
     resetStyles,
     arenaTokens,
+    arenaKeyframes,
     css`
       :host {
         display: block;
         min-height: 100vh;
-        background: var(--arena-bg);
+        background: var(--arena-bg-wash);
         color: var(--arena-text);
         font-family: var(--arena-font-sans);
       }
 
       .page {
-        max-width: 1100px;
+        max-width: 1240px;
         margin-inline: auto;
-        padding: clamp(var(--arena-space-4), 4vw, var(--arena-space-7));
-        display: flex;
-        flex-direction: column;
-        gap: var(--arena-space-5);
+        padding: clamp(16px, 3vw, 26px) clamp(14px, 4vw, 40px) 120px;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .page {
+          animation: aa-rise 0.45s ease both;
+        }
       }
 
+      /* Header ------------------------------------------------------------- */
       .header {
         display: flex;
         flex-wrap: wrap;
+        row-gap: 10px;
         align-items: center;
-        gap: var(--arena-space-3);
+        gap: 14px;
+        margin-bottom: 26px;
       }
       .back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--arena-text-muted);
-        text-decoration: none;
-        font-size: var(--arena-text-sm);
+        font-family: var(--arena-font-mono);
+        font-size: 13px;
         font-weight: 600;
+        color: var(--arena-text-label);
+        text-decoration: none;
+        white-space: nowrap;
       }
       .back:hover {
-        color: var(--arena-brand);
+        color: var(--arena-gold);
       }
       .title {
         margin: 0;
-        font-size: var(--arena-text-xl);
-        font-weight: 780;
-        letter-spacing: -0.02em;
-      }
-      .header-spacer {
-        flex: 1 1 auto;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--arena-text-strong);
       }
       .nav-link {
-        color: var(--arena-text-muted);
-        text-decoration: none;
-        font-size: var(--arena-text-sm);
+        margin-left: auto;
+        font-size: 13px;
         font-weight: 600;
+        color: var(--arena-text-dim);
+        text-decoration: none;
+        white-space: nowrap;
       }
       .nav-link:hover {
-        color: var(--arena-brand);
+        color: var(--arena-gold);
+      }
+      .back:focus-visible,
+      .nav-link:focus-visible {
+        outline: none;
+        border-radius: 4px;
+        box-shadow: 0 0 0 3px var(--arena-ring);
       }
 
+      /* Filter pills --------------------------------------------------------- */
       .filters {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--arena-space-2);
+        gap: 8px;
+        margin-bottom: 22px;
       }
       .filter-btn {
-        min-height: 36px;
-        padding: 0 var(--arena-space-4);
-        border: 1px solid var(--arena-border);
+        padding: 8px 16px;
+        border: 1px solid var(--arena-border-strong);
         border-radius: var(--arena-radius-pill);
-        background: var(--arena-surface);
-        color: var(--arena-text-muted);
+        background: transparent;
+        color: var(--arena-text-dim);
         font: inherit;
-        font-size: var(--arena-text-sm);
-        font-weight: 650;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
         transition:
-          border-color 140ms ease,
           background 140ms ease,
-          color 140ms ease;
+          color 140ms ease,
+          border-color 140ms ease;
       }
       .filter-btn:hover {
-        border-color: var(--arena-border-strong);
-        color: var(--arena-text);
+        background: rgba(255, 255, 255, 0.06);
       }
       .filter-btn:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px var(--arena-ring);
       }
       .filter-btn.selected {
-        border-color: var(--arena-brand);
-        background: color-mix(in srgb, var(--arena-brand) 10%, var(--arena-surface));
-        color: var(--arena-text);
-        box-shadow: inset 0 0 0 1px var(--arena-brand);
+        border-color: transparent;
+        background: linear-gradient(180deg, var(--arena-gold-a), var(--arena-gold-b));
+        color: var(--arena-brand-ink);
+        font-weight: 700;
       }
 
+      /* Card grid ------------------------------------------------------------ */
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-        gap: var(--arena-space-4);
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        gap: 16px;
+      }
+      .grid arena-archive-card {
+        height: 100%;
       }
 
       .load-more {
         display: flex;
         justify-content: center;
-        padding-block: var(--arena-space-2);
+        padding-block: 24px 0;
       }
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: var(--arena-space-2);
+        gap: 8px;
         min-height: 44px;
-        padding: 0 var(--arena-space-5);
-        border-radius: var(--arena-radius-md);
+        padding: 9px 16px;
+        border-radius: 9px;
         border: 1px solid var(--arena-border-strong);
-        background: var(--arena-surface);
+        background: rgba(255, 255, 255, 0.04);
         color: var(--arena-text);
         font: inherit;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
+        text-decoration: none;
+        transition: background 140ms ease;
       }
       .btn:hover:not([disabled]) {
-        border-color: var(--arena-brand);
+        background: rgba(255, 255, 255, 0.08);
       }
       .btn:focus-visible {
         outline: none;
@@ -184,65 +205,77 @@ export class ArenaArchivePage extends LitElement {
         cursor: progress;
         opacity: 0.65;
       }
+      .btn.primary {
+        border-color: transparent;
+        background: linear-gradient(180deg, var(--arena-gold-a), var(--arena-gold-b));
+        color: var(--arena-brand-ink);
+        font-weight: 700;
+        box-shadow:
+          0 6px 18px rgba(232, 184, 75, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+      .btn.primary:hover:not([disabled]) {
+        filter: brightness(1.05);
+      }
 
-      /* Centered states (loading / empty / error) — match watch.ts pattern */
+      /* Centered states (loading / empty / error) --------------------------- */
       .centered {
         display: grid;
         place-items: center;
         min-height: 40vh;
-        padding: var(--arena-space-5);
+        padding: 24px 0;
       }
       .state-card {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--arena-space-4);
-        max-width: 480px;
-        padding: clamp(var(--arena-space-5), 5vw, var(--arena-space-7));
+        gap: 14px;
+        max-width: 520px;
+        padding: clamp(24px, 6vw, 44px) clamp(20px, 7vw, 56px);
         text-align: center;
-        border: 1px solid var(--arena-border);
-        border-radius: var(--arena-radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 22px;
         background: var(--arena-surface);
-        box-shadow: var(--arena-shadow-2);
+        box-shadow: var(--arena-shadow-3);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .state-card {
+          animation: aa-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+        }
       }
       .state-eyebrow {
         font-family: var(--arena-font-mono);
-        font-size: var(--arena-text-xs);
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.16em;
-        color: var(--arena-text-muted);
+        letter-spacing: 0.22em;
+        color: var(--arena-text-label);
       }
       .state-title {
         margin: 0;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 780;
+        font-size: clamp(1.4rem, 4vw, 1.9rem);
+        font-weight: 800;
         letter-spacing: -0.02em;
+        color: var(--arena-text-strong);
       }
       .state-body {
         margin: 0;
         color: var(--arena-text-muted);
+        font-size: 14px;
         line-height: 1.55;
       }
       .state-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--arena-space-3);
+        gap: 12px;
         justify-content: center;
       }
-      .btn.primary {
-        background: var(--arena-brand);
-        color: var(--arena-brand-ink);
-        border-color: transparent;
-      }
-      .btn.primary:hover:not([disabled]) {
-        filter: brightness(1.07);
-      }
-      .btn.ghost {
-        background: var(--arena-surface);
-        border-color: var(--arena-border-strong);
-        color: var(--arena-text);
-        text-decoration: none;
+
+      .inline-error {
+        margin: 16px 0 0;
+        text-align: center;
+        font-size: 13px;
+        color: var(--arena-live-2);
       }
     `,
   ];
@@ -303,9 +336,8 @@ export class ArenaArchivePage extends LitElement {
     return html`
       <div class="page">
         <header class="header">
-          <a class="back" href=${landingHash()} aria-label="Back to start">← Arena</a>
+          <a class="back" href=${landingHash()} aria-label="Back to start">← ARENA</a>
           <h1 class="title">Match history</h1>
-          <span class="header-spacer"></span>
           <a class="nav-link" href=${leaderboardHash()}>Leaderboard</a>
         </header>
 
@@ -354,7 +386,7 @@ export class ArenaArchivePage extends LitElement {
               <button class="btn primary" type="button" @click=${() => void this._fetch(true)}>
                 Try again
               </button>
-              <a class="btn ghost" href=${landingHash()}>Back to start</a>
+              <a class="btn" href=${landingHash()}>Back to start</a>
             </div>
           </div>
         </div>
@@ -400,7 +432,7 @@ export class ArenaArchivePage extends LitElement {
           `
         : nothing}
       ${this._error
-        ? html`<p class="state-body" role="alert" style="text-align:center">${this._error}</p>`
+        ? html`<p class="inline-error" role="alert">${this._error}</p>`
         : nothing}
     `;
   }

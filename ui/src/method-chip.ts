@@ -16,22 +16,22 @@ const KNOWN: Record<MethodKind, MethodStyle> = {
   engine: {
     label: 'Engine',
     glyph: '⚙',
-    tone: 'color-mix(in srgb, #0e7490 70%, #64748b)',
+    tone: 'var(--arena-teal)',
   },
   model: {
     label: 'Model',
-    glyph: '🧠',
-    tone: 'var(--arena-brand)',
+    glyph: '✦',
+    tone: 'var(--arena-violet)',
   },
   human: {
     label: 'Human',
-    glyph: '🙂',
+    glyph: '●',
     tone: 'var(--arena-success)',
   },
   hybrid: {
     label: 'Hybrid',
     glyph: '⚗',
-    tone: 'var(--arena-seat-5)',
+    tone: 'var(--arena-gold)',
   },
 };
 
@@ -52,22 +52,23 @@ export class ArenaMethodChip extends LitElement {
       :host {
         display: inline-flex;
         vertical-align: middle;
-        font-family: var(--arena-font-sans);
+        font-family: var(--arena-font-mono);
       }
 
       .chip {
+        --tone: var(--arena-text-faint);
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 1px 7px;
-        border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--arena-border));
+        padding: 3px 9px;
+        border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
         border-radius: var(--arena-radius-pill);
-        background: color-mix(in srgb, var(--tone) 12%, var(--arena-surface));
-        color: color-mix(in srgb, var(--tone) 68%, var(--arena-text));
-        font-size: var(--arena-text-xs);
-        font-weight: 700;
+        background: color-mix(in srgb, var(--tone) 8%, transparent);
+        color: color-mix(in srgb, var(--tone) 55%, var(--arena-text-bright));
+        font-size: 10px;
+        font-weight: 600;
         line-height: 1.4;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         text-transform: capitalize;
         white-space: nowrap;
       }

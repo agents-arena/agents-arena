@@ -81,13 +81,54 @@ describe('<arena-match-report>', () => {
 
   it('renders one summary row per player with model and rejected count', async () => {
     const el = await mount(sampleReport());
-    const rows = el.shadowRoot!.querySelectorAll('tbody tr');
-    expect(rows.length).toBe(2);
     const root = el.shadowRoot!;
+    const rows = root.querySelectorAll('.prow:not(.head-row)');
+    expect(rows.length).toBe(2);
     expect(root.textContent).toContain('Ada');
     expect(root.textContent).toContain('opus-4');
     // Player Bo reported no tokens -> em dash cell present.
     expect(root.textContent).toContain('—');
+    // Rejected: 0 is calm/green, >0 flags red.
+    const rejected = root.querySelectorAll('.prow:not(.head-row) .num:last-of-type');
+    expect(rejected[0]?.classList.contains('ok')).toBe(true);
+    expect(rejected[1]?.classList.contains('bad')).toBe(true);
+  });
+
+  it('renders seat chips on player rows (accent class for non-chess seats)', async () => {
+    const el = await mount(sampleReport());
+    const chips = el.shadowRoot!.querySelectorAll('.prow:not(.head-row) .chip');
+    expect(chips.length).toBe(2);
+    expect(chips[0]!.classList.contains('accent')).toBe(true);
+  });
+
+  it('uses the physical WHITE/BLACK chip styling for chess seats', async () => {
+    const el = await mount(
+      sampleReport({
+        result: { kind: 'win', winner: 'white' },
+        players: [
+          { seat: 'white', name: 'Ada', moves: 6, totalThinkMs: 0, avgThinkMs: 51_400, rejected: 0 },
+          { seat: 'black', name: 'Bo', moves: 5, totalThinkMs: 0, avgThinkMs: 7_500, rejected: 0 },
+        ],
+        moves: [{ ply: 1, seat: 'white', move: { from: 'e2', to: 'e4' }, thinkMs: 160_000 }],
+      }),
+    );
+    const chips = el.shadowRoot!.querySelectorAll('.prow:not(.head-row) .chip');
+    expect(chips[0]!.classList.contains('white')).toBe(true);
+    expect(chips[1]!.classList.contains('black')).toBe(true);
+  });
+
+  it('renders {from,to} moves as "from → to" in the timeline', async () => {
+    const el = await mount(
+      sampleReport({
+        moves: [
+          { ply: 1, seat: 'X', move: { from: 'e2', to: 'e4' }, thinkMs: 800 },
+          { ply: 2, seat: 'O', move: { r: 1, c: 1 }, thinkMs: 900 },
+        ],
+      }),
+    );
+    const moves = el.shadowRoot!.querySelectorAll('.timeline .move');
+    expect(moves[0]?.textContent).toBe('e2 → e4');
+    expect(moves[1]?.textContent).toContain('"r":1');
   });
 
   it('renders one timeline entry per move with compact JSON', async () => {
@@ -98,6 +139,13 @@ describe('<arena-match-report>', () => {
     expect(first.querySelector('.move')?.textContent).toContain('"r":0');
     // Telemetry note surfaces on the second move.
     expect(el.shadowRoot!.textContent).toContain('blocked');
+  });
+
+  it('staggers timeline rows via --rise-delay custom property', async () => {
+    const el = await mount(sampleReport());
+    const entries = el.shadowRoot!.querySelectorAll<HTMLElement>('.timeline .ply');
+    expect(entries[0]!.getAttribute('style')).toContain('--rise-delay: 0ms');
+    expect(entries[2]!.getAttribute('style')).toContain('--rise-delay: 120ms');
   });
 
   it('exposes a Download JSON button', async () => {
@@ -114,7 +162,7 @@ describe('<arena-match-report>', () => {
     expect(badge!.getAttribute('mode')).toBe('self');
   });
 
-  it('renders method chip and breakdown in player summary when methods present', async () => {
+  it('renders method chip with ×count and breakdown in player summary', async () => {
     const el = await mount(
       sampleReport({
         players: [
@@ -141,13 +189,37 @@ describe('<arena-match-report>', () => {
       }),
     );
     const root = el.shadowRoot!;
-    expect(root.querySelector('th.method')?.textContent).toContain('Method');
-    const chips = root.querySelectorAll('tbody arena-method-chip');
+    expect(root.querySelector('.prow.head-row')?.textContent).toContain('Method');
+    const chips = root.querySelectorAll('.prow:not(.head-row) arena-method-chip');
     expect(chips.length).toBeGreaterThanOrEqual(2);
     expect(chips[0]!.getAttribute('method')).toBe('engine');
     expect(chips[1]!.getAttribute('method')).toBe('model');
+    // Dominant count rides on the chip; the multi-method breakdown stays visible.
+    expect(root.querySelector('.mcount')?.textContent).toBe('×17');
     expect(root.textContent).toContain('17× engine');
     expect(root.textContent).toContain('1× model');
+  });
+
+  it('shows a single-method count without a redundant breakdown', async () => {
+    const el = await mount(
+      sampleReport({
+        players: [
+          {
+            seat: 'X',
+            name: 'Ada',
+            moves: 6,
+            totalThinkMs: 0,
+            avgThinkMs: 500,
+            rejected: 0,
+            methods: { model: 6 },
+          },
+          { seat: 'O', name: 'Bo', moves: 5, totalThinkMs: 0, avgThinkMs: 470, rejected: 0 },
+        ],
+      }),
+    );
+    const root = el.shadowRoot!;
+    expect(root.querySelector('.mcount')?.textContent).toBe('×6');
+    expect(root.querySelector('.method-break')).toBeNull();
   });
 
   it('renders a per-move method chip when meta.method is set', async () => {
