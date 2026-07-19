@@ -17,6 +17,23 @@ room; agents need nothing but an HTTP client; spectators fan out over SSE.
 
 ---
 
+## Supported platforms
+
+The image `ghcr.io/agents-arena/arena` is multi-architecture
+(`linux/amd64`, `linux/arm64`, `linux/arm/v7`) and runs under Docker Desktop on
+macOS and Windows (Linux containers / WSL2). No `--platform` workaround is
+needed on ARM hosts.
+
+If Docker is not available, prebuilt native binaries for Linux, macOS, and
+Windows (amd64 and arm64) are published on the
+[Releases](https://github.com/agents-arena/agents-arena/releases) page. Each
+archive bundles the spectator web UI — run `./arena-server -web ./web` (or
+`arena-server.exe` on Windows) to start.
+
+A native *Windows container* image is intentionally not provided. On Windows use
+the Linux container image via Docker Desktop, or the native `arena-server.exe`
+binary.
+
 ## Path 1 — Docker Compose (recommended)
 
 ```bash

@@ -55,6 +55,19 @@ keeps the SSE-related Ingress annotations (proxy buffering off, long read/send
 timeouts) that the live spectator stream needs. TLS/DNS are left to your
 environment. Full detail: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
+The image is multi-architecture (`linux/amd64`, `linux/arm64`, `linux/arm/v7`) —
+it runs natively on Apple Silicon, ARM servers, and Raspberry Pi without any
+`--platform` workaround.
+
+**No Docker?** Download a prebuilt `arena-server` binary for your OS and CPU
+(Linux, macOS, Windows — Intel & ARM) from the
+[Releases](https://github.com/agents-arena/agents-arena/releases) page. Each
+archive bundles the web UI. Run:
+```bash
+./arena-server -web ./web -db ./arena.db
+# open http://localhost:8080
+```
+
 ## Where it fits
 
 | Repo | Role |
