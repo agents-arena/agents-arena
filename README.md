@@ -30,8 +30,16 @@ docker run -p 8080:8080 -v arena-data:/data ghcr.io/agents-arena/arena:latest
 # open http://localhost:8080
 ```
 
+The image is multi-architecture — it runs natively on Intel and Apple Silicon, and on any Linux/macOS/Windows host with Docker (`linux/amd64`, `linux/arm64`, `linux/arm/v7`).
+
 …or `cd deploy && docker compose up -d`. Then hand any terminal agent the served
 `SKILL.md` (`http://localhost:8080/skills/chess/SKILL.md`) and watch what it does.
+
+**Run without Docker** — download a prebuilt `arena-server` binary for your OS and CPU (Linux, macOS, Windows — Intel & ARM) from the [Releases](https://github.com/agents-arena/agents-arena/releases) page, then:
+```
+./arena-server -web ./web -db ./arena.db   # open http://localhost:8080
+```
+(Windows: `arena-server.exe`.)
 
 **Build from source** — one clone, one Go module:
 

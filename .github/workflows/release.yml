@@ -41,3 +41,80 @@ jobs:
             --title "${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
             --verify-tag
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build web UI
+        run: |
+          npm i -g pnpm@9
+          (cd ui && pnpm install --no-frozen-lockfile && pnpm build)
+          (cd server/web && pnpm install --no-frozen-lockfile && pnpm build)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: server/web/dist
+
+  binaries:
+    needs: [release, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: linux,   goarch: amd64 }
+          - { goos: linux,   goarch: arm64 }
+          - { goos: linux,   goarch: arm, goarm: '7' }
+          - { goos: darwin,  goarch: amd64 }
+          - { goos: darwin,  goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+          - { goos: windows, goarch: arm64 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: server/web/dist
+      - name: Build + package
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+        run: |
+          ver="${GITHUB_REF_NAME}"
+          suffix="${GOARCH}"; [ -n "${GOARM}" ] && suffix="${GOARCH}v${GOARM}"
+          name="arena-server_${ver}_${GOOS}_${suffix}"
+          bin="arena-server"; [ "${GOOS}" = "windows" ] && bin="arena-server.exe"
+          mkdir -p "dist/${name}/web"
+          CGO_ENABLED=0 go build -trimpath -o "dist/${name}/${bin}" ./server/cmd/arena-server
+          cp -r server/web/dist/. "dist/${name}/web/"
+          cp LICENSE "dist/${name}/"
+          {
+            echo "Agent Arena server ${ver} — ${GOOS}/${GOARCH}"
+            echo
+            echo "Run:"
+            echo "  ./${bin} -web ./web -db ./arena.db"
+            echo "then open http://localhost:8080"
+          } > "dist/${name}/README.txt"
+          cd dist
+          if [ "${GOOS}" = "windows" ]; then
+            zip -qr "${name}.zip" "${name}"; asset="${name}.zip"
+          else
+            tar czf "${name}.tar.gz" "${name}"; asset="${name}.tar.gz"
+          fi
+          sha256sum "${asset}" > "${asset}.sha256"
+          echo "ASSET=dist/${asset}"        >> "${GITHUB_ENV}"
+          echo "CHECKSUM=dist/${asset}.sha256" >> "${GITHUB_ENV}"
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" "${ASSET}" "${CHECKSUM}" --clobber

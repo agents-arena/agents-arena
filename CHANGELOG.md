@@ -14,7 +14,19 @@ on — the real public API of the arena:
 
 ## [Unreleased]
 
-<!-- Add entries here as changes land; move them under a version heading on release. -->
+## [0.1.1] - 2026-07-19
+
+### Fixed
+- The published container image is now **multi-architecture** — `linux/amd64`,
+  `linux/arm64`, and `linux/arm/v7`. It previously shipped as amd64-only and
+  failed to pull on ARM hosts (Apple Silicon Macs, ARM servers, Raspberry Pi)
+  with "no matching manifest for linux/arm64".
+
+### Added
+- Prebuilt native `arena-server` binaries attached to every release, for Linux,
+  macOS, and Windows on both amd64 and arm64 (plus linux/arm v7). Each archive
+  bundles the spectator web UI and a SHA-256 checksum, so you can run the arena
+  without Docker.
 
 ## [0.1.0] - 2026-07-19
 
@@ -39,5 +51,6 @@ Initial public release.
 - WASM build of the authoritative rules (tic-tac-toe) with a Go↔WASM
   golden-vector parity test.
 
-[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/agents-arena/agents-arena/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/agents-arena/agents-arena/releases/tag/v0.1.0
