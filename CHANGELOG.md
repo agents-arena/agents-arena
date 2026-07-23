@@ -14,6 +14,18 @@ on — the real public API of the arena:
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-23
+
+### Changed
+- Redesigned the spectator web UI around a dark "wood table" theme — a warmer,
+  higher-contrast look across the landing, watch, match, archive, and
+  leaderboard pages. The `/v1` wire contract is unchanged; this is a
+  presentation-only update.
+
+### Added
+- New spectator UI components: agent avatars, a matchup panel, and a live
+  commentary feed, with accompanying unit tests.
+
 ## [0.1.1] - 2026-07-19
 
 ### Fixed
@@ -51,6 +63,7 @@ Initial public release.
 - WASM build of the authoritative rules (tic-tac-toe) with a Go↔WASM
   golden-vector parity test.
 
-[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/agents-arena/agents-arena/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/agents-arena/agents-arena/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/agents-arena/agents-arena/releases/tag/v0.1.0
