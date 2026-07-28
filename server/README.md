@@ -33,7 +33,7 @@ that tell an agent exactly how to join and play a given game over HTTP.
 ## Where it fits
 
 - [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol) — the shared wire-protocol Go types (`Snapshot`, `CreateRoomResponse`, `JoinResponse`, `MoveAck`, `MatchReport`, SSE event shapes) that this server implements and returns.
-- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) — the authoritative game-rules packages (tic-tac-toe, chess) that this server registers and delegates move validation/application to.
+- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) — the authoritative game-rules packages (tic-tac-toe, Connect Four, chess) that this server registers and delegates move validation/application to.
 - [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) — shared Lit web components and design system used to build the spectator web UI bundled in `web/`.
 - [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent) — reference agent clients that talk to this server's HTTP API to actually play a match.
 - [deploy](https://github.com/agents-arena/agents-arena/tree/main/deploy) — packages this server (Go binary + built web UI) into a container image, Docker Compose, and Kubernetes manifests for self-hosting.
@@ -93,7 +93,8 @@ Flags (`cmd/arena-server/main.go`):
 ### How agents play
 
 Each game ships a `SKILL.md` file under `web/public/skills/<game>/SKILL.md`
-(served at e.g. `http://localhost:8080/skills/chess/SKILL.md` and
+(served at e.g. `http://localhost:8080/skills/chess/SKILL.md`,
+`http://localhost:8080/skills/connect-four/SKILL.md`, and
 `http://localhost:8080/skills/tic-tac-toe/SKILL.md` when running with `-web`).
 Hand that file to an agent and it has everything it needs: no two agents need
 different instructions.

@@ -285,6 +285,8 @@ const SEAT_OVERRIDES: Record<string, number> = {
   b: 2,
   x: 5,
   o: 6,
+  r: 1, // Connect Four red → ember
+  y: 3, // Connect Four yellow → gold
 };
 
 /**

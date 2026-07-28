@@ -12,21 +12,24 @@ import type {
 } from '@agents-arena/ui';
 import { WatchController } from '../watch-controller.js';
 import type { WatchView } from '../watch-controller.js';
-import type { ChessState, MatchReport, Player, Snapshot, TttState } from '../types.js';
+import type { ChessState, ConnectFourState, MatchReport, Player, Snapshot, TttState } from '../types.js';
 import { serverBase } from '../server.js';
 import { agentInstructions, skillUrl } from '../instructions.js';
 import { landingHash } from '../router.js';
 import '../components/ttt-watch-board.js';
+import '../components/c4-watch-board.js';
 
 /** Friendly display name per game id. */
 const GAME_NAMES: Record<string, string> = {
   'tic-tac-toe': 'Tic-Tac-Toe',
+  'connect-four': 'Connect Four',
   chess: 'Chess',
 };
 
 /** Default seat labels per game, shown before both players are seated. */
 const DEFAULT_SEATS: Record<string, string[]> = {
   'tic-tac-toe': ['X', 'O'],
+  'connect-four': ['R', 'Y'],
   chess: ['white', 'black'],
 };
 
@@ -34,6 +37,7 @@ const DEFAULT_SEATS: Record<string, string[]> = {
 const FELT: Record<string, string> = {
   chess: 'radial-gradient(130% 150% at 50% -10%, #1e4132 0%, #132a1f 52%, #0d1c14 100%)',
   'tic-tac-toe': 'radial-gradient(120% 140% at 50% -10%, #1d1a2e 0%, #141220 55%, #0e0d17 100%)',
+  'connect-four': 'radial-gradient(120% 140% at 50% -10%, #1a2a4a 0%, #121a2e 55%, #0c101c 100%)',
 };
 
 /** Format a think time compactly: "850ms", "2.6s", "1m 03s". */
@@ -610,6 +614,17 @@ export class ArenaWatchPage extends LitElement {
     return typeof state?.next === 'string' ? state.next : 'X';
   }
 
+  private _c4Cells(snap: Snapshot | null): (string | null)[] {
+    const state = snap?.state as Partial<ConnectFourState> | undefined;
+    if (state && Array.isArray(state.board) && state.board.length === 42) return state.board;
+    return new Array<string | null>(42).fill(null);
+  }
+
+  private _c4Next(snap: Snapshot | null): string {
+    const state = snap?.state as Partial<ConnectFourState> | undefined;
+    return typeof state?.next === 'string' ? state.next : 'R';
+  }
+
   private _seats(snap: Snapshot): string[] {
     if (snap.players.length >= 2) return snap.players.map((p) => p.seat);
     return DEFAULT_SEATS[snap.gameId] ?? ['X', 'O'];
@@ -847,6 +862,7 @@ export class ArenaWatchPage extends LitElement {
 
   private _renderStage(snap: Snapshot | null, gameId: string) {
     if (gameId === 'chess') return this._renderChessStage(snap);
+    if (gameId === 'connect-four') return this._renderC4Stage(snap);
     return this._renderTttStage(snap);
   }
 
@@ -883,6 +899,17 @@ export class ArenaWatchPage extends LitElement {
     return html`
       <div class="felt ttt" style=${`--felt:${FELT['tic-tac-toe']}`}>
         <ttt-watch-board .cells=${this._cells(snap)} next=${this._next(snap)}></ttt-watch-board>
+        <div class="underboard" style="justify-content:center">
+          ${this._renderClockOrResult(snap)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderC4Stage(snap: Snapshot | null) {
+    return html`
+      <div class="felt ttt" style=${`--felt:${FELT['connect-four']}`}>
+        <c4-watch-board .cells=${this._c4Cells(snap)} next=${this._c4Next(snap)}></c4-watch-board>
         <div class="underboard" style="justify-content:center">
           ${this._renderClockOrResult(snap)}
         </div>

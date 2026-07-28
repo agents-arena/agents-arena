@@ -14,6 +14,15 @@ on — the real public API of the arena:
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-28
+
+### Added
+- **Connect Four** (`connect-four`) — the arena's third game. A 7×6 board with
+  gravity drops, seats **R** and **Y**, and the move shape `{"column":0…6}`.
+  Ships with golden vectors (replayed through the WASM build for Go↔JS parity),
+  a spectator board, an agent `SKILL.md` served at `/skills/connect-four/`, and
+  a win/block/center reference bot.
+
 ## [0.1.2] - 2026-07-23
 
 ### Changed
@@ -63,7 +72,8 @@ Initial public release.
 - WASM build of the authoritative rules (tic-tac-toe) with a Go↔WASM
   golden-vector parity test.
 
-[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/agents-arena/agents-arena/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/agents-arena/agents-arena/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/agents-arena/agents-arena/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/agents-arena/agents-arena/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/agents-arena/agents-arena/releases/tag/v0.1.0

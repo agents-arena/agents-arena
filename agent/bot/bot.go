@@ -1,16 +1,16 @@
 // Package bot is a headless game-playing loop driven entirely by the server
-// HTTP API — the reference "terminal agent". It ships a smart tic-tac-toe
-// heuristic and falls back to random-legal picks for any game that exposes
-// the /v1/rooms/{id}/legal endpoint (chess, etc.).
+// HTTP API — the reference "terminal agent". It ships smart heuristics for
+// tic-tac-toe and Connect Four, and falls back to random-legal picks for any
+// game that exposes the /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
 // (protocol.ReasoningSelf), a bot must not use external solvers, engines, or
 // tablebases to choose its move — it must reason itself. Agents can read
 // protocol.Snapshot.Reasoning to check the room's declared mode if they need
-// to gate behavior. These reference bots (minimax tic-tac-toe heuristic and
-// random-legal chess picker) are simple in-process algorithms with no external
-// solver calls, so they are always honestly labeled Method: "engine"
-// regardless of the room's reasoning mode.
+// to gate behavior. These reference bots (in-process heuristics and
+// random-legal chess picker) are simple algorithms with no external solver
+// calls, so they are always honestly labeled Method: "engine" regardless of
+// the room's reasoning mode.
 package bot
 
 import (
@@ -125,6 +125,132 @@ func choose(b [9]string, seat string) int {
 	return -1
 }
 
+// --- Connect Four state & heuristics ------------------------------------------
+
+const (
+	c4Cols = 7
+	c4Rows = 6
+	c4Size = c4Cols * c4Rows
+)
+
+type c4Wire struct {
+	Board [c4Size]*string `json:"board"`
+	Next  string          `json:"next"`
+}
+
+func c4Board(snap protocol.Snapshot) ([c4Size]string, error) {
+	var s c4Wire
+	if err := json.Unmarshal(snap.State, &s); err != nil {
+		return [c4Size]string{}, err
+	}
+	var b [c4Size]string
+	for i, c := range s.Board {
+		if c != nil {
+			b[i] = *c
+		}
+	}
+	return b, nil
+}
+
+func c4Other(seat string) string {
+	if seat == "R" {
+		return "Y"
+	}
+	return "R"
+}
+
+func c4DropRow(b [c4Size]string, col int) int {
+	for r := c4Rows - 1; r >= 0; r-- {
+		if b[r*c4Cols+col] == "" {
+			return r
+		}
+	}
+	return -1
+}
+
+func c4OpenColumns(b [c4Size]string) []int {
+	var out []int
+	for c := 0; c < c4Cols; c++ {
+		if c4DropRow(b, c) >= 0 {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+func c4Wins(b [c4Size]string, seat string) bool {
+	dirs := [][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+	for r := 0; r < c4Rows; r++ {
+		for c := 0; c < c4Cols; c++ {
+			if b[r*c4Cols+c] != seat {
+				continue
+			}
+			for _, d := range dirs {
+				ok := true
+				for k := 1; k < 4; k++ {
+					rr, cc := r+d[0]*k, c+d[1]*k
+					if rr < 0 || rr >= c4Rows || cc < 0 || cc >= c4Cols || b[rr*c4Cols+cc] != seat {
+						ok = false
+						break
+					}
+				}
+				if ok {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// c4Drop returns b with seat's disc dropped into col. Callers must know col is open.
+func c4Drop(b [c4Size]string, col int, seat string) [c4Size]string {
+	nb := b
+	nb[c4DropRow(nb, col)*c4Cols+col] = seat
+	return nb
+}
+
+// c4Choose picks a column: win now, else block the opponent's win, else the
+// most central column that doesn't hand the opponent a win on top of our disc.
+func c4Choose(b [c4Size]string, seat string) int {
+	opp := c4Other(seat)
+	open := c4OpenColumns(b)
+	if len(open) == 0 {
+		return -1
+	}
+	for _, col := range open {
+		if c4Wins(c4Drop(b, col, seat), seat) {
+			return col
+		}
+	}
+	for _, col := range open {
+		if c4Wins(c4Drop(b, col, opp), opp) {
+			return col
+		}
+	}
+	// A column is "safe" unless dropping here uncovers a winning square for the
+	// opponent directly above. Prefer safe columns; if every column is poisoned
+	// the position is lost anyway, so fall back to the same center preference.
+	safe := func(col int) bool {
+		after := c4Drop(b, col, seat)
+		if c4DropRow(after, col) < 0 {
+			return true // that column is now full — nothing lands on top
+		}
+		return !c4Wins(c4Drop(after, col, opp), opp)
+	}
+	center := []int{3, 2, 4, 1, 5, 0, 6}
+	for _, onlySafe := range []bool{true, false} {
+		for _, pref := range center {
+			for _, col := range open {
+				if col == pref && (!onlySafe || safe(col)) {
+					return col
+				}
+			}
+		}
+	}
+	return open[0]
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -233,6 +359,40 @@ func playTTTTurn(c *client.Client, room, token, seat, model string, snap protoco
 	return nil
 }
 
+func playC4Turn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	b, err := c4Board(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	col := c4Choose(b, seat)
+	if col < 0 {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	mv, _ := json.Marshal(map[string]int{"column": col})
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "win/block/center heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		log(fmt.Sprintf("%s (%s) → column %d", seat, model, col))
+	}
+	if c4Wins(c4Drop(b, col, seat), seat) {
+		_ = c.Emote(room, token, protocol.EmotionCelebrating, "gg!")
+	} else {
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -305,9 +465,12 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 		}
 
 		var turnErr error
-		if snap.GameID == "tic-tac-toe" {
+		switch snap.GameID {
+		case "tic-tac-toe":
 			turnErr = playTTTTurn(c, room, token, seat, model, snap, log)
-		} else {
+		case "connect-four":
+			turnErr = playC4Turn(c, room, token, seat, model, snap, log)
+		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
 		if turnErr != nil {
@@ -336,11 +499,33 @@ func renderTTT(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
-// Render draws the board of a snapshot as ASCII (tic-tac-toe) or a summary.
+func renderC4(snap protocol.Snapshot) string {
+	b, _ := c4Board(snap)
+	cell := func(i int) string {
+		if b[i] == "" {
+			return "·"
+		}
+		return b[i]
+	}
+	var sb strings.Builder
+	for r := 0; r < c4Rows; r++ {
+		sb.WriteByte('|')
+		for c := 0; c < c4Cols; c++ {
+			fmt.Fprintf(&sb, " %s", cell(r*c4Cols+c))
+		}
+		sb.WriteString(" |\n")
+	}
+	sb.WriteString("  0 1 2 3 4 5 6\n")
+	return sb.String()
+}
+
+// Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
 		return renderTTT(snap)
+	case "connect-four":
+		return renderC4(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`

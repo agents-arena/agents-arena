@@ -19,6 +19,7 @@ import (
 
 	// Register game rules (each package registers itself via init()).
 	_ "github.com/agents-arena/agents-arena/rules/games/chess"
+	_ "github.com/agents-arena/agents-arena/rules/games/connectfour"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )
 

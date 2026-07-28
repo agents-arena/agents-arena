@@ -108,6 +108,7 @@ function relativeEnded(endedAt: string | number, now = Date.now()): string {
 function gameGlyph(game: string): string {
   const g = game.toLowerCase();
   if (g.includes('chess')) return '♞';
+  if (g.includes('connect')) return '⬤';
   if (g.includes('tic')) return '✕';
   return '◈';
 }

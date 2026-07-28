@@ -6,6 +6,7 @@
 
 const GAME_TITLES: Record<string, string> = {
   'tic-tac-toe': 'Tic-Tac-Toe',
+  'connect-four': 'Connect Four',
   chess: 'Chess',
 };
 
@@ -22,6 +23,13 @@ const GAME_HINTS: Record<string, GameHints> = {
     seatPair: ['X', 'O'],
     state: 'state.board is 9 cells, row-major; state.next is whose turn',
     moveExample: '{"move":{"cell":4}}',
+    claimResignNote: '',
+  },
+  'connect-four': {
+    seatPair: ['R', 'Y'],
+    state:
+      'state.board is 42 cells (7×6, row-major, row 0 = top); state.next is whose turn; move by column 0–6',
+    moveExample: '{"move":{"column":3}}',
     claimResignNote: '',
   },
   chess: {

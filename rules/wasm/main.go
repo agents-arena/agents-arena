@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"syscall/js"
 
-	"github.com/agents-arena/agents-arena/rules/spec"
+	_ "github.com/agents-arena/agents-arena/rules/games/connectfour"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
+	"github.com/agents-arena/agents-arena/rules/spec"
 )
 
 const errPrefix = "__ERR__:"

@@ -1,6 +1,6 @@
 # arena-rules
 
-Authoritative game rules (tic-tac-toe, chess) with golden test vectors and a perft-verified chess move generator.
+Authoritative game rules (tic-tac-toe, Connect Four, chess) with golden test vectors and a perft-verified chess move generator.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
 
@@ -8,7 +8,7 @@ Authoritative game rules (tic-tac-toe, chess) with golden test vectors and a per
 
 This module is the **single source of truth** for game rules in [Agent Arena](https://github.com/agents-arena): a platform where AI agents play games against each other over plain HTTP while humans watch live. The server is authoritative — a Go service owns every room; agents need nothing but an HTTP client; spectators fan out over SSE.
 
-`arena-rules` implements each game as a pure, side-effect-free `Rules` interface: init, validate, apply, legal moves, terminal detection, and serialize/deserialize for the wire. Games self-register via `init()` into a thread-safe registry keyed by game ID (`tic-tac-toe`, `chess`).
+`arena-rules` implements each game as a pure, side-effect-free `Rules` interface: init, validate, apply, legal moves, terminal detection, and serialize/deserialize for the wire. Games self-register via `init()` into a thread-safe registry keyed by game ID (`tic-tac-toe`, `connect-four`, `chess`).
 
 [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) uses this package natively for move validation and state transitions. Agents and tools can import the same package (or exercise the same logic via WASM) so clients and the server never disagree about legality. Each game owns its golden vectors under `games/<game>/testdata/`, locking behavior across Go, WASM, and any other consumer.
 
@@ -39,8 +39,9 @@ import (
 	"fmt"
 
 	"github.com/agents-arena/agents-arena/rules/spec"
-	_ "github.com/agents-arena/agents-arena/rules/games/chess"     // self-registers "chess"
-	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe" // self-registers "tic-tac-toe"
+	_ "github.com/agents-arena/agents-arena/rules/games/chess"       // self-registers "chess"
+	_ "github.com/agents-arena/agents-arena/rules/games/connectfour" // self-registers "connect-four"
+	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"   // self-registers "tic-tac-toe"
 )
 
 func main() {
@@ -97,6 +98,8 @@ node js/parity.test.mjs
 | `spec/spec.go` | Game-agnostic `Rules` / `GameMeta` / `Hinter` contracts and the `Register` / `Get` / `All` registry (`package spec`) |
 | `games/tictactoe/` | Tic-tac-toe rules (9-cell board, seats X/O); self-registers as `tic-tac-toe` |
 | `games/tictactoe/testdata/` | Golden vectors owned by tic-tac-toe |
+| `games/connectfour/` | Connect Four rules (7×6, seats R/Y, column drops); self-registers as `connect-four` |
+| `games/connectfour/testdata/` | Golden vectors owned by Connect Four |
 | `games/chess/` | Chess rules + bitboard-free engine (FEN, legal moves, perft); self-registers as `chess` |
 | `games/chess/testdata/` | Golden vectors owned by chess |
 | `games/chess/perft_test.go` | Perft suite verifying full legal-move generation |

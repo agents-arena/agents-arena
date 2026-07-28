@@ -50,11 +50,12 @@ func playGame(c *client.Client, g int, game, aName, bName, aModel, bModel string
 	logf := func(s string) { mu.Lock(); fmt.Println("  " + s); mu.Unlock() }
 
 	// Random-legal chess between two bots can run many hundreds of plies before
-	// the auto-draw rules end it; give long games room while keeping tic-tac-toe
-	// smokes snappy.
-	budget := 30 * time.Second
-	if game != "tic-tac-toe" {
-		budget = 20 * time.Minute
+	// the auto-draw rules end it; give long games room while keeping the small
+	// board games' smokes snappy.
+	budget := 20 * time.Minute
+	switch game {
+	case "tic-tac-toe", "connect-four":
+		budget = 30 * time.Second
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()

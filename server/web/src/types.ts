@@ -31,6 +31,14 @@ export interface TttState {
   next: string;
 }
 
+/** Connect Four board state (the JSON in `Snapshot.state` for this game). */
+export interface ConnectFourState {
+  /** 42 cells, row-major (7×6, row 0 = top); each is "R", "Y", or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

@@ -1,0 +1,200 @@
+[
+  {
+    "name": "initial legal move by R",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 3},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (Y on initial)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "Y",
+    "move": {"column": 3},
+    "expectValid": false,
+    "expectReason": "not your turn"
+  },
+  {
+    "name": "column out of range high",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 7},
+    "expectValid": false,
+    "expectReason": "column out of range"
+  },
+  {
+    "name": "column out of range negative",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": -1},
+    "expectValid": false,
+    "expectReason": "column out of range"
+  },
+  {
+    "name": "column full",
+    "state": {
+      "board": [
+        "R", null, null, null, null, null, null,
+        "Y", null, null, null, null, null, null,
+        "R", null, null, null, null, null, null,
+        "Y", null, null, null, null, null, null,
+        "R", null, null, null, null, null, null,
+        "Y", null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 0},
+    "expectValid": false,
+    "expectReason": "column full"
+  },
+  {
+    "name": "horizontal win for R (bottom row)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        "R", "R", "R", null, "Y", "Y", "Y"
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 3},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "four-in-a-row"}
+  },
+  {
+    "name": "vertical win for Y",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, "Y", null, null, null, null, null,
+        "R", "Y", null, null, null, null, null,
+        "R", "Y", "R", null, null, null, null
+      ],
+      "next": "Y"
+    },
+    "seat": "Y",
+    "move": {"column": 1},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "Y", "reason": "four-in-a-row"}
+  },
+  {
+    "name": "diagonal win for R (rising)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, "R", "Y", null, null, null,
+        null, "R", "Y", "Y", null, null, null,
+        "R", "Y", "R", "Y", null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 3},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "four-in-a-row"}
+  },
+  {
+    "name": "move after terminal (game over)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        "R", "R", "R", "R", "Y", "Y", "Y"
+      ],
+      "next": "Y"
+    },
+    "seat": "Y",
+    "move": {"column": 4},
+    "expectValid": false,
+    "expectReason": "game over"
+  },
+  {
+    "name": "draw on filling last cell",
+    "state": {
+      "board": [
+        "Y", "Y", null, "R", "Y", "R", "R",
+        "R", "R", "Y", "Y", "R", "R", "R",
+        "Y", "Y", "R", "R", "Y", "Y", "Y",
+        "Y", "R", "Y", "Y", "Y", "R", "R",
+        "R", "Y", "Y", "R", "R", "Y", "Y",
+        "R", "R", "R", "Y", "Y", "R", "R"
+      ],
+      "next": "Y"
+    },
+    "seat": "Y",
+    "move": {"column": 2},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "board full"}
+  },
+  {
+    "name": "diagonal win for R (falling)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null,
+        "Y",  "R",  null, null, null, null, null,
+        "R",  "Y",  "R",  null, null, null, null,
+        "Y",  "Y",  "R",  "R",  null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"column": 0},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "four-in-a-row"}
+  }
+]
