@@ -1,0 +1,393 @@
+[
+  {
+    "name": "opening stone by B (centre)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 112},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (W on an empty board)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "W",
+    "move": {"cell": 112},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range high",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 225},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range negative",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": -1},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell occupied",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "W",
+      "last": 112
+    },
+    "seat": "W",
+    "move": {"cell": 112},
+    "expectValid": false,
+    "expectReason": "cell occupied",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "horizontal five completes the row",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, "B", "B", "B", "B", null, null, null, null, null, null, null, null,
+        null, null, null, "W", "W", "W", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "last": 125
+    },
+    "seat": "B",
+    "move": {"cell": 112},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "five in a row"}
+  },
+  {
+    "name": "vertical five completes the column",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, "W", "B", null, null, null,
+        null, null, null, null, null, null, null, null, null, null, "W", "B", null, null, null,
+        null, null, null, null, null, null, null, null, null, null, "W", "B", null, null, null,
+        null, null, null, null, null, null, null, null, null, null, "W", null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "W",
+      "last": 71
+    },
+    "seat": "W",
+    "move": {"cell": 100},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "W", "reason": "five in a row"}
+  },
+  {
+    "name": "diagonal five completes the line",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, "W", null, null, null, null, null,
+        null, null, null, null, "B", null, null, null, null, null, "W", null, null, null, null,
+        null, null, null, null, null, "B", null, null, null, null, null, "W", null, null, null,
+        null, null, null, null, null, null, "B", null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "last": 85
+    },
+    "seat": "B",
+    "move": {"cell": 112},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "five in a row"}
+  },
+  {
+    "name": "anti-diagonal five completes the line",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, "W", null, null, null,
+        null, null, null, null, null, null, null, null, null, null, "W", null, null, null, null,
+        null, null, null, null, null, null, null, null, null, "W", null, null, null, null, null,
+        null, null, null, null, null, null, null, null, "W", null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, "B", null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, "B", null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, "B", null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "W",
+      "last": 182
+    },
+    "seat": "W",
+    "move": {"cell": 112},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "W", "reason": "five in a row"}
+  },
+  {
+    "name": "four in a row is not yet a win",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, "B", "B", "B", null, null, null, null, null, null, null, null, null,
+        null, null, null, "W", "W", "W", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "last": 125
+    },
+    "seat": "B",
+    "move": {"cell": 111},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "filling a gap to make six still wins",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, "B", "B", "B", "B", null, "B", null, null, null, null, null, null, null,
+        null, null, "W", "W", "W", "W", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "last": 125
+    },
+    "seat": "B",
+    "move": {"cell": 111},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "five in a row"}
+  },
+  {
+    "name": "game over once five is on the board",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, "B", "B", "B", "B", "B", null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "W"
+    },
+    "seat": "W",
+    "move": {"cell": 0},
+    "expectValid": false,
+    "expectReason": "game over",
+    "expectResultAfter": null
+  },
+  {
+    "name": "filling the last point with no five is a draw",
+    "state": {
+      "board": [
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B",
+        "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", "W", "B", null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 224},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "board full"}
+  }
+]

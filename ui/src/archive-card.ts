@@ -110,6 +110,7 @@ function gameGlyph(game: string): string {
   if (g.includes('chess')) return '♞';
   if (g.includes('connect')) return '⬤';
   if (g.includes('reversi') || g.includes('othello')) return '◐';
+  if (g.includes('gomoku')) return '⚫';
   if (g.includes('tic')) return '✕';
   return '◈';
 }

@@ -17,6 +17,7 @@ import type {
   ConnectFourState,
   MatchReport,
   Player,
+  GomokuState,
   ReversiState,
   Snapshot,
   TttState,
@@ -27,12 +28,14 @@ import { landingHash } from '../router.js';
 import '../components/ttt-watch-board.js';
 import '../components/c4-watch-board.js';
 import '../components/reversi-watch-board.js';
+import '../components/gomoku-watch-board.js';
 
 /** Friendly display name per game id. */
 const GAME_NAMES: Record<string, string> = {
   'tic-tac-toe': 'Tic-Tac-Toe',
   'connect-four': 'Connect Four',
   reversi: 'Reversi',
+  gomoku: 'Gomoku',
   chess: 'Chess',
 };
 
@@ -41,6 +44,7 @@ const DEFAULT_SEATS: Record<string, string[]> = {
   'tic-tac-toe': ['X', 'O'],
   'connect-four': ['R', 'Y'],
   reversi: ['B', 'W'],
+  gomoku: ['B', 'W'],
   chess: ['white', 'black'],
 };
 
@@ -50,6 +54,7 @@ const FELT: Record<string, string> = {
   'tic-tac-toe': 'radial-gradient(120% 140% at 50% -10%, #1d1a2e 0%, #141220 55%, #0e0d17 100%)',
   'connect-four': 'radial-gradient(120% 140% at 50% -10%, #1a2a4a 0%, #121a2e 55%, #0c101c 100%)',
   reversi: 'radial-gradient(120% 140% at 50% -10%, #1c3a2b 0%, #12241b 55%, #0b1712 100%)',
+  gomoku: 'radial-gradient(120% 140% at 50% -10%, #3a2a18 0%, #241a10 55%, #17100a 100%)',
 };
 
 /** Format a think time compactly: "850ms", "2.6s", "1m 03s". */
@@ -648,6 +653,22 @@ export class ArenaWatchPage extends LitElement {
     return typeof state?.next === 'string' ? state.next : 'B';
   }
 
+  private _gomokuCells(snap: Snapshot | null): (string | null)[] {
+    const state = snap?.state as Partial<GomokuState> | undefined;
+    if (state && Array.isArray(state.board) && state.board.length === 225) return state.board;
+    return new Array<string | null>(225).fill(null);
+  }
+
+  private _gomokuNext(snap: Snapshot | null): string {
+    const state = snap?.state as Partial<GomokuState> | undefined;
+    return typeof state?.next === 'string' ? state.next : 'B';
+  }
+
+  private _gomokuLast(snap: Snapshot | null): number | null {
+    const state = snap?.state as Partial<GomokuState> | undefined;
+    return typeof state?.last === 'number' ? state.last : null;
+  }
+
   private _seats(snap: Snapshot): string[] {
     if (snap.players.length >= 2) return snap.players.map((p) => p.seat);
     return DEFAULT_SEATS[snap.gameId] ?? ['X', 'O'];
@@ -887,6 +908,7 @@ export class ArenaWatchPage extends LitElement {
     if (gameId === 'chess') return this._renderChessStage(snap);
     if (gameId === 'connect-four') return this._renderC4Stage(snap);
     if (gameId === 'reversi') return this._renderReversiStage(snap);
+    if (gameId === 'gomoku') return this._renderGomokuStage(snap);
     return this._renderTttStage(snap);
   }
 
@@ -948,6 +970,21 @@ export class ArenaWatchPage extends LitElement {
           .cells=${this._reversiCells(snap)}
           next=${this._reversiNext(snap)}
         ></reversi-watch-board>
+        <div class="underboard" style="justify-content:center">
+          ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderGomokuStage(snap: Snapshot | null) {
+    return html`
+      <div class="felt ttt" style=${`--felt:${FELT.gomoku}`}>
+        <gomoku-watch-board
+          .cells=${this._gomokuCells(snap)}
+          next=${this._gomokuNext(snap)}
+          .last=${this._gomokuLast(snap)}
+        ></gomoku-watch-board>
         <div class="underboard" style="justify-content:center">
           ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
         </div>

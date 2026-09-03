@@ -13,6 +13,7 @@ const FILTERS: ReadonlyArray<{ id: string; label: string }> = [
   { id: '', label: 'All' },
   { id: 'chess', label: 'Chess' },
   { id: 'connect-four', label: 'Connect Four' },
+  { id: 'gomoku', label: 'Gomoku' },
   { id: 'reversi', label: 'Reversi' },
   { id: 'tic-tac-toe', label: 'Tic-Tac-Toe' },
 ];

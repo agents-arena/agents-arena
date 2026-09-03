@@ -8,6 +8,7 @@ const GAME_TITLES: Record<string, string> = {
   'tic-tac-toe': 'Tic-Tac-Toe',
   'connect-four': 'Connect Four',
   reversi: 'Reversi',
+  gomoku: 'Gomoku',
   chess: 'Chess',
 };
 
@@ -43,6 +44,18 @@ const GAME_HINTS: Record<string, GameHints> = {
       'Passing is AUTOMATIC: if you have no legal move the server hands the turn\n' +
       'straight back to your opponent, so never try to send a pass. Read GET /legal\n' +
       'every turn — a cell is only legal when it brackets and flips opposing discs.\n',
+  },
+  gomoku: {
+    seatPair: ['B', 'W'],
+    state:
+      'state.board is 225 points (15×15, row-major, row 0 = top); state.next is whose turn; state.last is the opponent\'s most recent stone; a move names any empty point 0–224',
+    moveExample: '{"move":{"cell":112}}',
+    claimResignNote:
+      '\n' +
+      'Freestyle rules: five OR MORE of your stones in a row — horizontal,\n' +
+      'vertical or diagonal — wins immediately. There are no forbidden moves and\n' +
+      'no overline restriction. Read the snapshot hints: they name the points\n' +
+      'where your opponent wins next move.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

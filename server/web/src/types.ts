@@ -51,6 +51,16 @@ export interface ReversiState {
   w?: number;
 }
 
+/** Gomoku board state (the JSON in `Snapshot.state` for this game). */
+export interface GomokuState {
+  /** 225 points, row-major (15×15, row 0 = top); each is "B", "W", or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** Index of the most recent stone, or null before the first move. */
+  last: number | null;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

@@ -1,7 +1,8 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe, Connect Four and Reversi, and falls back to random-legal picks
-// for any game that exposes the /v1/rooms/{id}/legal endpoint (chess, etc.).
+// tic-tac-toe, Connect Four, Reversi and Gomoku, and falls back to
+// random-legal picks for any game that exposes the /v1/rooms/{id}/legal
+// endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
 // (protocol.ReasoningSelf), a bot must not use external solvers, engines, or
@@ -416,6 +417,224 @@ func rvChoose(b [rvSize]string, seat string) int {
 	return best
 }
 
+// --- gomoku state & heuristics ------------------------------------------------
+
+const (
+	gmCols = 15
+	gmRows = 15
+	gmSize = gmCols * gmRows
+	gmWin  = 5
+)
+
+var gmDirs = [4][2]int{{0, 1}, {1, 0}, {1, 1}, {1, -1}}
+
+type gmWire struct {
+	Board [gmSize]*string `json:"board"`
+	Next  string          `json:"next"`
+	Last  *int            `json:"last"`
+}
+
+func gmBoard(snap protocol.Snapshot) ([gmSize]string, error) {
+	var s gmWire
+	if err := json.Unmarshal(snap.State, &s); err != nil {
+		return [gmSize]string{}, err
+	}
+	var b [gmSize]string
+	for i, c := range s.Board {
+		if c != nil {
+			b[i] = *c
+		}
+	}
+	return b, nil
+}
+
+func gmOther(seat string) string {
+	if seat == "B" {
+		return "W"
+	}
+	return "B"
+}
+
+// gmLineScore rates the line seat would own through cell in one direction: how
+// many stones join up, and how many of the two ends stay open. An open four
+// wins next move; a closed three is nearly worthless.
+func gmLineScore(b [gmSize]string, cell int, dr, dc int, seat string) int {
+	r, c := cell/gmCols, cell%gmCols
+	run := 1
+	open := 0
+	for _, sign := range []int{1, -1} {
+		rr, cc := r+dr*sign, c+dc*sign
+		for rr >= 0 && rr < gmRows && cc >= 0 && cc < gmCols && b[rr*gmCols+cc] == seat {
+			run++
+			rr += dr * sign
+			cc += dc * sign
+		}
+		if rr >= 0 && rr < gmRows && cc >= 0 && cc < gmCols && b[rr*gmCols+cc] == "" {
+			open++
+		}
+	}
+	switch {
+	case run >= gmWin:
+		return 1000000
+	case run == 4 && open >= 1:
+		return 10000
+	case run == 3 && open == 2:
+		return 1000
+	case run == 3 && open == 1:
+		return 100
+	case run == 2 && open == 2:
+		return 50
+	case run == 2 && open == 1:
+		return 10
+	default:
+		return open
+	}
+}
+
+// gmValue scores a candidate point for seat: what it builds, plus what it
+// denies. Denial is weighted just under construction, so the bot blocks a live
+// four but still prefers completing its own five.
+func gmValue(b [gmSize]string, cell int, seat string) int {
+	opp := gmOther(seat)
+	mine, theirs := 0, 0
+	for _, d := range gmDirs {
+		mine += gmLineScore(b, cell, d[0], d[1], seat)
+		theirs += gmLineScore(b, cell, d[0], d[1], opp)
+	}
+	// Centre tie-break: nearer the middle is worth a hair more.
+	r, c := cell/gmCols, cell%gmCols
+	centre := 14 - (gmAbs(r-7) + gmAbs(c-7))
+	return 2*mine + theirs + centre
+}
+
+func gmAbs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+// gmCandidates lists empty points within two of a stone — the only points worth
+// considering once anything is on the board.
+func gmCandidates(b [gmSize]string) []int {
+	empty := true
+	for _, v := range b {
+		if v != "" {
+			empty = false
+			break
+		}
+	}
+	if empty {
+		return []int{7*gmCols + 7} // the centre opening
+	}
+	var out []int
+	for i := 0; i < gmSize; i++ {
+		if b[i] != "" {
+			continue
+		}
+		r, c := i/gmCols, i%gmCols
+		near := false
+		for dr := -2; dr <= 2 && !near; dr++ {
+			for dc := -2; dc <= 2; dc++ {
+				rr, cc := r+dr, c+dc
+				if rr >= 0 && rr < gmRows && cc >= 0 && cc < gmCols && b[rr*gmCols+cc] != "" {
+					near = true
+					break
+				}
+			}
+		}
+		if near {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+// gmWinsAt reports whether seat playing cell completes five or more in a row.
+func gmWinsAt(b [gmSize]string, cell int, seat string) bool {
+	if cell < 0 || cell >= gmSize || b[cell] != "" {
+		return false
+	}
+	r, c := cell/gmCols, cell%gmCols
+	for _, d := range gmDirs {
+		run := 1
+		for _, sign := range []int{1, -1} {
+			rr, cc := r+d[0]*sign, c+d[1]*sign
+			for rr >= 0 && rr < gmRows && cc >= 0 && cc < gmCols && b[rr*gmCols+cc] == seat {
+				run++
+				rr += d[0] * sign
+				cc += d[1] * sign
+			}
+		}
+		if run >= gmWin {
+			return true
+		}
+	}
+	return false
+}
+
+// gmWinCount counts the empty points where seat would complete five right now.
+// Two or more is a double threat: the opponent can only answer one of them.
+func gmWinCount(b [gmSize]string, seat string) int {
+	n := 0
+	for i := 0; i < gmSize; i++ {
+		if b[i] == "" && gmWinsAt(b, i, seat) {
+			n++
+		}
+	}
+	return n
+}
+
+// gmWith returns b with seat's stone on cell.
+func gmWith(b [gmSize]string, cell int, seat string) [gmSize]string {
+	nb := b
+	nb[cell] = seat
+	return nb
+}
+
+// gmChoose picks a point, in priority order: win now; stop an immediate loss;
+// create a double threat (two winning points at once, which cannot all be
+// blocked); pre-empt the opponent doing the same; otherwise take the
+// highest-scoring point near the action.
+//
+// Without the double-threat steps two of these bots simply block each other's
+// fours forever and fill all 225 points to a draw — mutual blocking is stable,
+// and only an unanswerable fork breaks it.
+func gmChoose(b [gmSize]string, seat string) int {
+	opp := gmOther(seat)
+	cands := gmCandidates(b)
+	if len(cands) == 0 {
+		return -1
+	}
+	for _, cell := range cands {
+		if gmWinsAt(b, cell, seat) {
+			return cell
+		}
+	}
+	for _, cell := range cands {
+		if gmWinsAt(b, cell, opp) {
+			return cell
+		}
+	}
+	for _, cell := range cands {
+		if gmWinCount(gmWith(b, cell, seat), seat) >= 2 {
+			return cell
+		}
+	}
+	for _, cell := range cands {
+		if gmWinCount(gmWith(b, cell, opp), opp) >= 2 {
+			return cell
+		}
+	}
+	best, bestScore := cands[0], 0
+	for i, cell := range cands {
+		if v := gmValue(b, cell, seat); i == 0 || v > bestScore {
+			best, bestScore = cell, v
+		}
+	}
+	return best
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -596,6 +815,43 @@ func playReversiTurn(c *client.Client, room, token, seat, model string, snap pro
 	return nil
 }
 
+func playGomokuTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	b, err := gmBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	cell := gmChoose(b, seat)
+	if cell < 0 {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	mv, _ := json.Marshal(map[string]int{"cell": cell})
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "threat-scoring heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		log(fmt.Sprintf("%s (%s) → point %d (row %d, col %d)", seat, model, cell, cell/gmCols+1, cell%gmCols+1))
+	}
+	switch {
+	case gmWinsAt(b, cell, seat):
+		_ = c.Emote(room, token, protocol.EmotionCelebrating, "gg!")
+	case gmWinsAt(b, cell, gmOther(seat)):
+		_ = c.Emote(room, token, protocol.EmotionNervous, "had to block that")
+	default:
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -675,6 +931,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playC4Turn(c, room, token, seat, model, snap, log)
 		case "reversi":
 			turnErr = playReversiTurn(c, room, token, seat, model, snap, log)
+		case "gomoku":
+			turnErr = playGomokuTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -750,8 +1008,28 @@ func renderReversi(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
+func renderGomoku(snap protocol.Snapshot) string {
+	b, _ := gmBoard(snap)
+	var sb strings.Builder
+	for r := 0; r < gmRows; r++ {
+		fmt.Fprintf(&sb, "%2d", gmRows-r)
+		for c := 0; c < gmCols; c++ {
+			switch b[r*gmCols+c] {
+			case "B":
+				sb.WriteString(" ●")
+			case "W":
+				sb.WriteString(" ○")
+			default:
+				sb.WriteString(" ·")
+			}
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
 // Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
-// Reversi) or a summary.
+// Reversi / Gomoku) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
@@ -760,6 +1038,8 @@ func Render(snap protocol.Snapshot) string {
 		return renderC4(snap)
 	case "reversi":
 		return renderReversi(snap)
+	case "gomoku":
+		return renderGomoku(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`
