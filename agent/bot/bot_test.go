@@ -452,3 +452,129 @@ func TestDbChooseReturnsNoMoveOnAFullGrid(t *testing.T) {
 		t.Errorf("dbChoose on a full grid = %d, want -1", got)
 	}
 }
+
+// ckTestPos builds a Checkers position from 8 rows of 8 runes: '.' empty,
+// r/R red man/king, b/B black.
+func ckTestPos(t *testing.T, rows ...string) ckPos {
+	t.Helper()
+	if len(rows) != 8 {
+		t.Fatalf("need 8 rows, got %d", len(rows))
+	}
+	p := ckPos{chain: -1}
+	for r, row := range rows {
+		if len(row) != 8 {
+			t.Fatalf("row %d: need 8 squares, got %d", r, len(row))
+		}
+		for c, ch := range row {
+			if ch != '.' {
+				p.board[r*8+c] = string(ch)
+			}
+		}
+	}
+	return p
+}
+
+func TestCkChooseTakesTheForcedJump(t *testing.T) {
+	p := ckTestPos(t,
+		"........",
+		"........",
+		"........",
+		"........",
+		"...b....",
+		"....r...",
+		"........",
+		"......r.",
+	)
+	m, ok := ckChoose(p, "R")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	if m.From != 5*8+4 || m.To != 3*8+2 {
+		t.Errorf("ckChoose = %+v, want the jump 44 → 26", m)
+	}
+}
+
+func TestCkChooseFollowsTheChain(t *testing.T) {
+	// Mid-multi-jump: only the chained piece may move, and it must jump again.
+	p := ckTestPos(t,
+		"........",
+		"........",
+		"...b....",
+		"..r.....",
+		"........",
+		"........",
+		"........",
+		"......r.",
+	)
+	p.chain = 3*8 + 2
+	m, ok := ckChoose(p, "R")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	if m.From != 3*8+2 || m.To != 1*8+4 {
+		t.Errorf("ckChoose = %+v, want the chained jump 26 → 12", m)
+	}
+}
+
+func TestCkChooseAvoidsHangingAPiece(t *testing.T) {
+	// Two quiet moves: one steps beside a black man and is captured, the other
+	// is safe. (Black cannot jump the safe square, so material decides.)
+	p := ckTestPos(t,
+		"........",
+		"........",
+		"........",
+		"..b.....",
+		"........",
+		"r.....r.",
+		"........",
+		"........",
+	)
+	m, ok := ckChoose(p, "R")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	after, _ := ckApply(p.board, m, "R")
+	for _, reply := range ckLegal(ckPos{board: after, chain: -1}, "B") {
+		if abs8(reply.To/8-reply.From/8) == 2 {
+			t.Errorf("ckChoose = %+v, which lets black jump with %+v", m, reply)
+		}
+	}
+}
+
+func TestCkChooseReturnsNoMoveWhenStuck(t *testing.T) {
+	p := ckTestPos(t,
+		"........",
+		"........",
+		"........",
+		"........",
+		"........",
+		"..b.....",
+		".b......",
+		"r.......",
+	)
+	if _, ok := ckChoose(p, "R"); ok {
+		t.Error("ckChoose found a move for a boxed-in piece")
+	}
+}
+
+func TestCkApplyCrownsAndStopsTheChain(t *testing.T) {
+	// A red man jumps onto the crown row with another jump available: crowning
+	// ends the turn, so ckApply must not report a continuation.
+	p := ckTestPos(t,
+		"........",
+		"..b.b...",
+		".....r..",
+		"........",
+		"........",
+		"........",
+		"........",
+		"........",
+	)
+	after, again := ckApply(p.board, ckMove{From: 2*8 + 5, To: 0*8 + 3}, "R")
+	if after[3] != "R" {
+		t.Errorf("crown square holds %q, want a red king", after[3])
+	}
+	if again {
+		t.Error("ckApply wants to keep jumping after a crowning")
+	}
+}

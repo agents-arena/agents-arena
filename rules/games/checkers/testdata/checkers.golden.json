@@ -1,0 +1,319 @@
+[
+  {
+    "name": "opening move by R",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 40, "to": 33},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (B on the opening position)",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "B",
+    "move": {"from": 17, "to": 24},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "square out of range",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 64, "to": 0},
+    "expectValid": false,
+    "expectReason": "square out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "no piece of yours on that square",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 33, "to": 24},
+    "expectValid": false,
+    "expectReason": "no piece of yours on that square",
+    "expectResultAfter": null
+  },
+  {
+    "name": "moving the opponent's piece",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 17, "to": 24},
+    "expectValid": false,
+    "expectReason": "no piece of yours on that square",
+    "expectResultAfter": null
+  },
+  {
+    "name": "a man may not move backwards",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 40, "to": 49},
+    "expectValid": false,
+    "expectReason": "illegal move",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "board": [
+        null, "b", null, "b", null, "b", null, "b",
+        "b", null, "b", null, "b", null, "b", null,
+        null, "b", null, "b", null, "b", null, "b",
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        "r", null, "r", null, "r", null, "r", null,
+        null, "r", null, "r", null, "r", null, "r",
+        "r", null, "r", null, "r", null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "square out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "a quiet move is refused while a jump exists",
+    "state": {
+      "board": [
+        null, "b", null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, null, null, "r", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 62, "to": 53},
+    "expectValid": false,
+    "expectReason": "captures are forced",
+    "expectResultAfter": null
+  },
+  {
+    "name": "the forced jump is legal",
+    "state": {
+      "board": [
+        null, "b", null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, null, null, "r", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, "r", null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 44, "to": 26},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "mid-chain, another piece may not move",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, "r", null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, "r", null
+      ],
+      "next": "R",
+      "chain": 26,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 62, "to": 53},
+    "expectValid": false,
+    "expectReason": "must continue jumping with the piece on 26",
+    "expectResultAfter": null
+  },
+  {
+    "name": "mid-chain, the chained jump is legal",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, "r", null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, "r", null
+      ],
+      "next": "R",
+      "chain": 26,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 26, "to": 12},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "taking the last black piece wins",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "b", null, null, null, null,
+        null, null, null, null, "r", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "R",
+    "move": {"from": 44, "to": 26},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "no pieces left"}
+  },
+  {
+    "name": "game over once a side has nothing",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, "r", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "chain": null,
+      "idle": 0
+    },
+    "seat": "B",
+    "move": {"from": 44, "to": 35},
+    "expectValid": false,
+    "expectReason": "game over",
+    "expectResultAfter": null
+  },
+  {
+    "name": "a king move at the idle limit draws",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "R", null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, "B", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "R",
+      "chain": null,
+      "idle": 79
+    },
+    "seat": "R",
+    "move": {"from": 19, "to": 10},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "no progress"}
+  }
+]

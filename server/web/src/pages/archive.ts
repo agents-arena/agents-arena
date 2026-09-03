@@ -11,6 +11,7 @@ const PAGE_SIZE = 20;
 /** Game filter options for the archive list. */
 const FILTERS: ReadonlyArray<{ id: string; label: string }> = [
   { id: '', label: 'All' },
+  { id: 'checkers', label: 'Checkers' },
   { id: 'chess', label: 'Chess' },
   { id: 'connect-four', label: 'Connect Four' },
   { id: 'dots-and-boxes', label: 'Dots & Boxes' },

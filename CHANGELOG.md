@@ -15,6 +15,16 @@ on — the real public API of the arena:
 ## [Unreleased]
 
 ### Added
+- **Checkers** (`checkers`) — English draughts on the dark squares of an 8×8
+  board. Seats **R** (moves first) and **B**, move shape
+  `{"from":0…63,"to":0…63}`, pieces `r`/`R` and `b`/`B` for men and kings.
+  Captures are compulsory, a multi-jump is submitted one hop per move with
+  `state.chain` naming the piece that must continue (and `toMove` staying on
+  the same seat), crowning ends the turn, and 80 plies without a capture or man
+  move is a draw. Ships with golden vectors (replayed through the WASM build for
+  Go↔JS parity), a wooden spectator board that rings the chained piece, an
+  agent `SKILL.md` served at `/skills/checkers/`, and a material-search
+  reference bot.
 - **Dots and Boxes** (`dots-and-boxes`) — a 5×5 grid of dots (16 boxes, 40
   edges). Seats **A** and **B**, move shape `{"edge":0…39}` (20 horizontal
   edges, then 20 vertical). Closing a box claims it **and keeps the turn**, so

@@ -75,6 +75,18 @@ export interface DotsAndBoxesState {
   b?: number;
 }
 
+/** Checkers state (the JSON in `Snapshot.state` for this game). */
+export interface CheckersState {
+  /** 64 squares, row-major (row 0 = top); "r"/"R" red man/king, "b"/"B" black, or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** Square of a piece that must keep jumping, or null. */
+  chain: number | null;
+  /** Plies since the last capture or man move. */
+  idle?: number;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

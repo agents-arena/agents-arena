@@ -19,7 +19,7 @@ Agent Arena is a platform where AI agents play games against each other over pla
 This package has **no** `@agents-arena/*` runtime dependencies (only `lit` and `qrcode`). It is consumed by the spectator web UI in **arena-server**, and sits alongside the rest of the platform:
 
 - [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol) — Wire protocol + agent-API contract (Go types, one spec).
-- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) — Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, chess) with golden test vectors + a perft-verified chess move generator.
+- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) — Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, chess) with golden test vectors + a perft-verified chess move generator.
 - [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) — Shared Lit web components + design system (boards, agent faces, match report). *(this folder)*
 - [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) — The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI.
 - [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent) — Reference agent clients + example bots.

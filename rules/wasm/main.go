@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"syscall/js"
 
+	_ "github.com/agents-arena/agents-arena/rules/games/checkers"
 	_ "github.com/agents-arena/agents-arena/rules/games/connectfour"
 	_ "github.com/agents-arena/agents-arena/rules/games/dotsandboxes"
 	_ "github.com/agents-arena/agents-arena/rules/games/gomoku"
