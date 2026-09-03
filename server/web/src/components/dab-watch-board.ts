@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, svg, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { arenaTokens, resetStyles, arenaKeyframes } from '@agents-arena/ui';
 
@@ -190,7 +190,9 @@ export class DabWatchBoard extends LitElement {
             const c = i % BOX_COLS;
             const p = dot(r, c);
             const cls = `box ${owner === 'A' ? 'a' : 'b'}`;
-            return html`
+            // Fragments nested inside <svg> must use lit's `svg` tag, or they
+            // are built in the HTML namespace and never paint.
+            return svg`
               <rect class=${cls} x=${p.x} y=${p.y} width=${PITCH} height=${PITCH} rx="4"></rect>
               <text
                 class=${`owner ${owner === 'A' ? 'a' : 'b'}`}
@@ -204,7 +206,7 @@ export class DabWatchBoard extends LitElement {
           ${lines}
           ${Array.from({ length: DOTS * DOTS }, (_, i) => {
             const p = dot(Math.floor(i / DOTS), i % DOTS);
-            return html`<circle class="dot" cx=${p.x} cy=${p.y} r="5"></circle>`;
+            return svg`<circle class="dot" cx=${p.x} cy=${p.y} r="5"></circle>`;
           })}
         </svg>
       </div>
@@ -222,7 +224,7 @@ export class DabWatchBoard extends LitElement {
     label: string,
   ) {
     const cls = `edge ${owner === 'A' ? 'a' : owner === 'B' ? 'b' : 'idle'}`;
-    return html`<line
+    return svg`<line
       class=${cls}
       x1=${from.x}
       y1=${from.y}
