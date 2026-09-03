@@ -524,14 +524,15 @@ export class ArenaLandingPage extends LitElement {
         flex: 1 1 auto;
       }
 
-      /* Game picker */
+      /* Game picker — two per row, so a game's name and blurb never squeeze
+         into a one-word-per-line column as the roster grows. */
       .game-pick {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         margin-bottom: 12px;
       }
       .game-option {
-        flex: 1;
         min-width: 0;
         text-align: left;
         border: 1px solid rgba(255, 255, 255, 0.1);

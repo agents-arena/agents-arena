@@ -48,9 +48,8 @@ export class ReversiWatchBoard extends LitElement {
         width: 100%;
         max-width: 460px;
         font-family: var(--arena-font-sans);
-        --felt-a: #1f6b46;
-        --felt-b: #1a5c3c;
-        --line: rgba(0, 0, 0, 0.42);
+        --felt-a: #1e6a45;
+        --line: rgba(0, 0, 0, 0.45);
         --frame: #123024;
       }
 
@@ -75,14 +74,13 @@ export class ReversiWatchBoard extends LitElement {
         overflow: hidden;
       }
 
+      /* One flat felt with hairline grid lines — a Reversi board is not a
+         checkerboard, and alternating squares would read as chess. */
       .cell {
         position: relative;
         aspect-ratio: 1;
         background: var(--felt-a);
-        box-shadow: inset 0 0 0 0.5px var(--line);
-      }
-      .cell.alt {
-        background: var(--felt-b);
+        box-shadow: inset -1px -1px 0 var(--line);
       }
 
       .disc {
@@ -151,10 +149,8 @@ export class ReversiWatchBoard extends LitElement {
       <div class="frame">
         <div class="grid" role="group" aria-label=${boardLabel}>
           ${cells.map((mark, i) => {
-            const row = Math.floor(i / COLS);
-            const col = i % COLS;
             const seatClass = mark === 'B' ? 'b' : mark === 'W' ? 'w' : '';
-            const cls = ['cell', (row + col) % 2 ? 'alt' : '', seatClass].filter(Boolean).join(' ');
+            const cls = seatClass ? `cell ${seatClass}` : 'cell';
             const label = mark === 'B' ? 'black' : mark === 'W' ? 'white' : 'empty';
             return html`
               <div class=${cls} role="img" aria-label=${`${squareName(i)}: ${label}`}>
