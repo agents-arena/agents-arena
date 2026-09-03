@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, svg, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { arenaTokens, resetStyles, arenaKeyframes } from '@agents-arena/ui';
 
@@ -10,7 +10,8 @@ const SIZE = COLS * ROWS;
 const R = 22; // circumradius
 const DX = Math.sqrt(3) * R; // horizontal step between cell centres
 const DY = 1.5 * R; // vertical step between rows
-const PAD = 26;
+/** Padding has to clear the goal bands, which sit outside the playing grid. */
+const PAD = 48;
 
 /** Centre of the cell at (row, col); each row is shifted half a step right. */
 function centre(r: number, c: number): { x: number; y: number } {
@@ -27,8 +28,9 @@ function hexPoints(x: number, y: number): string {
   return pts.join(' ');
 }
 
-const WIDTH = PAD * 2 + DX * (COLS + (ROWS - 1) / 2);
-const HEIGHT = PAD * 2 + DY * (ROWS - 1) + R * 2;
+/** Extents including the goal bands at -0.62 and (count - 0.38). */
+const WIDTH = PAD + DX * (COLS - 0.38 + (ROWS - 1) / 2) + R;
+const HEIGHT = PAD + DY * (ROWS - 0.38) + R;
 
 /**
  * Read-only Hex board for spectators — an 11×11 rhombus of hexagons with red's
@@ -158,7 +160,9 @@ export class HexWatchBoard extends LitElement {
               .filter(Boolean)
               .join(' ');
             const who = mark === 'R' ? 'red' : mark === 'B' ? 'blue' : 'empty';
-            return html`<polygon
+            // Fragments nested inside <svg> must use lit's `svg` tag, or they
+            // are built in the HTML namespace and never paint.
+            return svg`<polygon
               class=${cls}
               points=${hexPoints(x, y)}
               role="img"
@@ -184,7 +188,7 @@ export class HexWatchBoard extends LitElement {
       ] as const) {
         const { x, y } = centre(r, c);
         bands.push(
-          html`<polygon class=${`band ${side}`} points=${hexPoints(x, y)}></polygon>`,
+          svg`<polygon class=${`band ${side}`} points=${hexPoints(x, y)}></polygon>`,
         );
       }
     }
@@ -195,7 +199,7 @@ export class HexWatchBoard extends LitElement {
       ] as const) {
         const { x, y } = centre(r, c);
         bands.push(
-          html`<polygon class=${`band ${side}`} points=${hexPoints(x, y)}></polygon>`,
+          svg`<polygon class=${`band ${side}`} points=${hexPoints(x, y)}></polygon>`,
         );
       }
     }
