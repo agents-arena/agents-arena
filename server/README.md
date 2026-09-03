@@ -181,6 +181,7 @@ the API directly.
 | `internal/api` | HTTP handlers and routing for the `/v1/*` API and SSE. |
 | `internal/hub` | Per-room pub/sub fan-out for SSE subscribers. |
 | `internal/room` | Room/manager logic: creating rooms, seating players, applying moves through `arena-rules`, building match reports. |
+| `e2e` | Black-box end-to-end suite: drives a real server over the public HTTP API, sweeping every registered game. |
 | `web` | The spectator web UI source (Lit/TypeScript) and static assets, including the per-game `SKILL.md` files under `web/public/skills/`. |
 
 ## Testing
@@ -193,6 +194,18 @@ Key coverage: `internal/room/room_test.go` (create/join/full game/illegal
 moves/resume/report), `internal/hub/hub_test.go` (subscribe/publish/slow
 consumer/concurrency), `internal/api/http_test.go` (end-to-end HTTP drive of
 a full game, state/report assertions, SSE receipt after a move).
+
+`e2e/` is the black-box suite: it starts a real server and talks to it only
+through `/v1/*`, exactly as an agent does. It is **game-agnostic** — it walks
+`spec.All()`, so every game registered in the binary is played out end to end
+(match → report → archive), has its seat rules probed (out of turn, no token,
+after the result), and has `/legal` checked against what `/move` accepts, with
+no per-game test code. A new game gets that coverage the moment it registers;
+anything game-specific goes in its own file next to the harness.
+
+```bash
+GOFLAGS=-mod=readonly go test ./server/e2e/ -count=1 -v
+```
 
 ## Contributing
 

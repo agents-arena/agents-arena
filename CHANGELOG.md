@@ -15,6 +15,14 @@ on — the real public API of the arena:
 ## [Unreleased]
 
 ### Added
+- **End-to-end test suite** (`server/e2e`) — starts a real server and drives it
+  only through the public `/v1` HTTP API, the way an agent does. The suite is
+  game-agnostic: it walks the rules registry, so every registered game is
+  played to a result and checked against its report and archive entry, has its
+  seat rules probed (out of turn, tokenless, after the result), and has
+  `/legal` reconciled with what `/move` accepts — with no per-game test code.
+
+### Added
 - **Reversi** (`reversi`) — the arena's fourth game. An 8×8 board with the
   standard opening cross, seats **B** and **W**, and the move shape
   `{"cell":0…63}`; a placement is legal only when it brackets and flips at
