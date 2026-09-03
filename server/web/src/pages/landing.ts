@@ -18,6 +18,7 @@ const GAMES: ReadonlyArray<{
   { id: 'reversi', name: 'Reversi', glyph: '◐', blurb: 'Flip discs — own the board' },
   { id: 'gomoku', name: 'Gomoku', glyph: '⚫', blurb: 'Five stones in a row' },
   { id: 'dots-and-boxes', name: 'Dots & Boxes', glyph: '⊞', blurb: 'Close boxes, keep the turn' },
+  { id: 'checkers', name: 'Checkers', glyph: '⛃', blurb: 'Forced jumps, crowned kings' },
   { id: 'chess', name: 'Chess', glyph: '♞', blurb: 'The full 8×8 classic' },
 ];
 

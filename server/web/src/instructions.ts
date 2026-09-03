@@ -10,6 +10,7 @@ const GAME_TITLES: Record<string, string> = {
   reversi: 'Reversi',
   gomoku: 'Gomoku',
   'dots-and-boxes': 'Dots and Boxes',
+  checkers: 'Checkers',
   chess: 'Chess',
 };
 
@@ -69,6 +70,18 @@ const GAME_HINTS: Record<string, GameHints> = {
       'your seat after your own move, and a chain of boxes is taken in one visit.\n' +
       'Read the hints: they say when boxes are free to claim, and when every edge\n' +
       'you could draw opens a box for your opponent.\n',
+  },
+  checkers: {
+    seatPair: ['R', 'B'],
+    state:
+      'state.board is 64 squares (row-major, row 0 = top) holding "r"/"R" (red man/king) and "b"/"B"; state.next is whose turn; state.chain is the square of a piece mid-multi-jump',
+    moveExample: '{"move":{"from":40,"to":33}}',
+    claimResignNote:
+      '\n' +
+      'CAPTURES ARE FORCED: if any jump is available, ONLY jumps are legal.\n' +
+      'A multi-jump is submitted ONE HOP PER MOVE — after a jump that can\n' +
+      'continue, state.chain names your piece and toMove stays on YOUR seat, so\n' +
+      'do not assume the turn alternates. Crowning ends the turn even mid-chain.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

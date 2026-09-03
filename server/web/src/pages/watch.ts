@@ -13,6 +13,7 @@ import type {
 import { WatchController } from '../watch-controller.js';
 import type { WatchView } from '../watch-controller.js';
 import type {
+  CheckersState,
   ChessState,
   ConnectFourState,
   MatchReport,
@@ -31,6 +32,7 @@ import '../components/c4-watch-board.js';
 import '../components/reversi-watch-board.js';
 import '../components/gomoku-watch-board.js';
 import '../components/dab-watch-board.js';
+import '../components/checkers-watch-board.js';
 
 /** Friendly display name per game id. */
 const GAME_NAMES: Record<string, string> = {
@@ -39,6 +41,7 @@ const GAME_NAMES: Record<string, string> = {
   reversi: 'Reversi',
   gomoku: 'Gomoku',
   'dots-and-boxes': 'Dots and Boxes',
+  checkers: 'Checkers',
   chess: 'Chess',
 };
 
@@ -49,6 +52,7 @@ const DEFAULT_SEATS: Record<string, string[]> = {
   reversi: ['B', 'W'],
   gomoku: ['B', 'W'],
   'dots-and-boxes': ['A', 'B'],
+  checkers: ['R', 'B'],
   chess: ['white', 'black'],
 };
 
@@ -61,6 +65,7 @@ const FELT: Record<string, string> = {
   gomoku: 'radial-gradient(120% 140% at 50% -10%, #3a2a18 0%, #241a10 55%, #17100a 100%)',
   'dots-and-boxes':
     'radial-gradient(120% 140% at 50% -10%, #262133 0%, #1a1726 55%, #110f1a 100%)',
+  checkers: 'radial-gradient(130% 150% at 50% -10%, #33241a 0%, #211710 55%, #150e09 100%)',
 };
 
 /** Format a think time compactly: "850ms", "2.6s", "1m 03s". */
@@ -692,6 +697,22 @@ export class ArenaWatchPage extends LitElement {
     return typeof state?.next === 'string' ? state.next : 'A';
   }
 
+  private _checkersCells(snap: Snapshot | null): (string | null)[] {
+    const state = snap?.state as Partial<CheckersState> | undefined;
+    if (state && Array.isArray(state.board) && state.board.length === 64) return state.board;
+    return new Array<string | null>(64).fill(null);
+  }
+
+  private _checkersNext(snap: Snapshot | null): string {
+    const state = snap?.state as Partial<CheckersState> | undefined;
+    return typeof state?.next === 'string' ? state.next : 'R';
+  }
+
+  private _checkersChain(snap: Snapshot | null): number | null {
+    const state = snap?.state as Partial<CheckersState> | undefined;
+    return typeof state?.chain === 'number' ? state.chain : null;
+  }
+
   private _seats(snap: Snapshot): string[] {
     if (snap.players.length >= 2) return snap.players.map((p) => p.seat);
     return DEFAULT_SEATS[snap.gameId] ?? ['X', 'O'];
@@ -933,6 +954,7 @@ export class ArenaWatchPage extends LitElement {
     if (gameId === 'reversi') return this._renderReversiStage(snap);
     if (gameId === 'gomoku') return this._renderGomokuStage(snap);
     if (gameId === 'dots-and-boxes') return this._renderDabStage(snap);
+    if (gameId === 'checkers') return this._renderCheckersStage(snap);
     return this._renderTttStage(snap);
   }
 
@@ -1024,6 +1046,21 @@ export class ArenaWatchPage extends LitElement {
           .boxes=${this._dabBoxes(snap)}
           next=${this._dabNext(snap)}
         ></dab-watch-board>
+        <div class="underboard" style="justify-content:center">
+          ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderCheckersStage(snap: Snapshot | null) {
+    return html`
+      <div class="felt ttt" style=${`--felt:${FELT.checkers}`}>
+        <checkers-watch-board
+          .cells=${this._checkersCells(snap)}
+          next=${this._checkersNext(snap)}
+          .chain=${this._checkersChain(snap)}
+        ></checkers-watch-board>
         <div class="underboard" style="justify-content:center">
           ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
         </div>

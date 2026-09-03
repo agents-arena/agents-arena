@@ -1,7 +1,7 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe, Connect Four, Reversi, Gomoku and Dots and Boxes, and falls
-// back to random-legal picks for any game that exposes the
+// tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes and Checkers, and
+// falls back to random-legal picks for any game that exposes the
 // /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
@@ -807,6 +807,236 @@ func dbChoose(g dbGrid, _ string) int {
 	}
 }
 
+// --- checkers state & heuristics ----------------------------------------------
+
+const ckSize = 64
+
+type ckWire struct {
+	Board [ckSize]*string `json:"board"`
+	Next  string          `json:"next"`
+	Chain *int            `json:"chain"`
+}
+
+// ckPos is what the bot needs from a snapshot: the pieces and whose move it is.
+type ckPos struct {
+	board [ckSize]string
+	chain int
+}
+
+func ckBoard(snap protocol.Snapshot) (ckPos, error) {
+	var w ckWire
+	if err := json.Unmarshal(snap.State, &w); err != nil {
+		return ckPos{}, err
+	}
+	p := ckPos{chain: -1}
+	for i, c := range w.Board {
+		if c != nil {
+			p.board[i] = *c
+		}
+	}
+	if w.Chain != nil {
+		p.chain = *w.Chain
+	}
+	return p, nil
+}
+
+type ckMove struct {
+	From int `json:"from"`
+	To   int `json:"to"`
+}
+
+func ckSeatOf(piece string) string {
+	switch piece {
+	case "r", "R":
+		return "R"
+	case "b", "B":
+		return "B"
+	}
+	return ""
+}
+
+func ckOther(seat string) string {
+	if seat == "R" {
+		return "B"
+	}
+	return "R"
+}
+
+func ckIsKing(piece string) bool { return piece == "R" || piece == "B" }
+
+// ckDirs are the row directions a piece may travel: kings both ways, men
+// forwards only — red up the board, black down it.
+func ckDirs(piece string) []int {
+	if ckIsKing(piece) {
+		return []int{-1, 1}
+	}
+	if piece == "r" {
+		return []int{-1}
+	}
+	return []int{1}
+}
+
+func ckJumpsFrom(b [ckSize]string, from int) []ckMove {
+	piece := b[from]
+	if piece == "" {
+		return nil
+	}
+	opp := ckOther(ckSeatOf(piece))
+	r, c := from/8, from%8
+	var out []ckMove
+	for _, dr := range ckDirs(piece) {
+		for _, dc := range []int{-1, 1} {
+			mr, mc := r+dr, c+dc
+			lr, lc := r+2*dr, c+2*dc
+			if lr < 0 || lr > 7 || lc < 0 || lc > 7 {
+				continue
+			}
+			if ckSeatOf(b[mr*8+mc]) != opp || b[lr*8+lc] != "" {
+				continue
+			}
+			out = append(out, ckMove{From: from, To: lr*8 + lc})
+		}
+	}
+	return out
+}
+
+func ckStepsFrom(b [ckSize]string, from int) []ckMove {
+	piece := b[from]
+	if piece == "" {
+		return nil
+	}
+	r, c := from/8, from%8
+	var out []ckMove
+	for _, dr := range ckDirs(piece) {
+		for _, dc := range []int{-1, 1} {
+			nr, nc := r+dr, c+dc
+			if nr < 0 || nr > 7 || nc < 0 || nc > 7 {
+				continue
+			}
+			if b[nr*8+nc] == "" {
+				out = append(out, ckMove{From: from, To: nr*8 + nc})
+			}
+		}
+	}
+	return out
+}
+
+// ckLegal mirrors the server's rules: a chain restricts play to one piece,
+// captures are compulsory, and otherwise every quiet move is on.
+func ckLegal(p ckPos, seat string) []ckMove {
+	if p.chain >= 0 {
+		return ckJumpsFrom(p.board, p.chain)
+	}
+	var jumps, steps []ckMove
+	for i := 0; i < ckSize; i++ {
+		if ckSeatOf(p.board[i]) != seat {
+			continue
+		}
+		jumps = append(jumps, ckJumpsFrom(p.board, i)...)
+		steps = append(steps, ckStepsFrom(p.board, i)...)
+	}
+	if len(jumps) > 0 {
+		return jumps
+	}
+	return steps
+}
+
+// ckApply plays a move on a copy of the board, returning the new board and
+// whether the same piece can jump again (promotion ends the turn).
+func ckApply(b [ckSize]string, m ckMove, seat string) ([ckSize]string, bool) {
+	nb := b
+	piece := nb[m.From]
+	nb[m.From] = ""
+	nb[m.To] = piece
+	jumped := -1
+	if abs8(m.To/8-m.From/8) == 2 {
+		jumped = (m.From/8+m.To/8)/2*8 + (m.From%8+m.To%8)/2
+		nb[jumped] = ""
+	}
+	promoted := false
+	if !ckIsKing(piece) {
+		crown := 7
+		if seat == "R" {
+			crown = 0
+		}
+		if m.To/8 == crown {
+			if seat == "R" {
+				nb[m.To] = "R"
+			} else {
+				nb[m.To] = "B"
+			}
+			promoted = true
+		}
+	}
+	return nb, jumped >= 0 && !promoted && len(ckJumpsFrom(nb, m.To)) > 0
+}
+
+func abs8(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+// ckMaterial scores a position from seat's point of view: kings are worth
+// roughly one and a half men, and men are worth more the closer they get to
+// being crowned.
+func ckMaterial(b [ckSize]string, seat string) int {
+	score := 0
+	for i, p := range b {
+		if p == "" {
+			continue
+		}
+		v := 10
+		if ckIsKing(p) {
+			v = 15
+		} else if p == "r" {
+			v += (7 - i/8) / 2 // red advances upward
+		} else {
+			v += (i / 8) / 2
+		}
+		if ckSeatOf(p) == seat {
+			score += v
+		} else {
+			score -= v
+		}
+	}
+	return score
+}
+
+// ckChoose picks a move by material after the opponent's best reply — enough to
+// take free pieces, finish multi-jumps, and not walk into an obvious capture.
+func ckChoose(p ckPos, seat string) (ckMove, bool) {
+	moves := ckLegal(p, seat)
+	if len(moves) == 0 {
+		return ckMove{}, false
+	}
+	best, bestScore := moves[0], 0
+	for i, m := range moves {
+		nb, again := ckApply(p.board, m, seat)
+		score := ckMaterial(nb, seat)
+		if !again {
+			// What does the opponent take in reply? Assume their best jump.
+			reply := ckLegal(ckPos{board: nb, chain: -1}, ckOther(seat))
+			worst := 0
+			for j, rm := range reply {
+				rb, _ := ckApply(nb, rm, ckOther(seat))
+				s := ckMaterial(rb, seat)
+				if j == 0 || s < worst {
+					worst = s
+				}
+			}
+			if len(reply) > 0 {
+				score = worst
+			}
+		}
+		if i == 0 || score > bestScore {
+			best, bestScore = m, score
+		}
+	}
+	return best, true
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -1062,6 +1292,45 @@ func playDabTurn(c *client.Client, room, token, seat, model string, snap protoco
 	return nil
 }
 
+func playCheckersTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	p, err := ckBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	m, ok := ckChoose(p, seat)
+	if !ok {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	capture := abs8(m.To/8-m.From/8) == 2
+	mv, _ := json.Marshal(m)
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "material search, one reply deep",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		verb := "→"
+		if capture {
+			verb = "x"
+		}
+		log(fmt.Sprintf("%s (%s) %s %d %s %d", seat, model, verb, m.From, verb, m.To))
+	}
+	if capture {
+		_ = c.Emote(room, token, protocol.EmotionSmug, "")
+	} else {
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -1145,6 +1414,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playGomokuTurn(c, room, token, seat, model, snap, log)
 		case "dots-and-boxes":
 			turnErr = playDabTurn(c, room, token, seat, model, snap, log)
+		case "checkers":
+			turnErr = playCheckersTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -1284,8 +1555,34 @@ func renderDab(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
+func renderCheckers(snap protocol.Snapshot) string {
+	p, err := ckBoard(snap)
+	if err != nil {
+		return fmt.Sprintf("game: checkers\nstate: %s", string(snap.State))
+	}
+	var sb strings.Builder
+	for r := 0; r < 8; r++ {
+		fmt.Fprintf(&sb, "%d", 8-r)
+		for c := 0; c < 8; c++ {
+			piece := p.board[r*8+c]
+			if piece == "" {
+				if (r+c)%2 == 1 {
+					sb.WriteString(" ·")
+				} else {
+					sb.WriteString("  ")
+				}
+				continue
+			}
+			fmt.Fprintf(&sb, " %s", piece)
+		}
+		sb.WriteByte('\n')
+	}
+	sb.WriteString("  a b c d e f g h\n")
+	return sb.String()
+}
+
 // Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
-// Reversi / Gomoku / Dots and Boxes) or a summary.
+// Reversi / Gomoku / Dots and Boxes / Checkers) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
@@ -1298,6 +1595,8 @@ func Render(snap protocol.Snapshot) string {
 		return renderGomoku(snap)
 	case "dots-and-boxes":
 		return renderDab(snap)
+	case "checkers":
+		return renderCheckers(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`
