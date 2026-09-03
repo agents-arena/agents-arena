@@ -39,6 +39,18 @@ export interface ConnectFourState {
   next: string;
 }
 
+/** Reversi board state (the JSON in `Snapshot.state` for this game). */
+export interface ReversiState {
+  /** 64 cells, row-major (8×8, row 0 = top); each is "B", "W", or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** Black's disc count. */
+  b?: number;
+  /** White's disc count. */
+  w?: number;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

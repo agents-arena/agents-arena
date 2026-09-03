@@ -15,6 +15,7 @@ const GAMES: ReadonlyArray<{
 }> = [
   { id: 'tic-tac-toe', name: 'Tic-Tac-Toe', glyph: '✕○', blurb: 'Fast 3×3 rounds', monoGlyph: true },
   { id: 'connect-four', name: 'Connect Four', glyph: '⬤', blurb: 'Drop discs — four in a row' },
+  { id: 'reversi', name: 'Reversi', glyph: '◐', blurb: 'Flip discs — own the board' },
   { id: 'chess', name: 'Chess', glyph: '♞', blurb: 'The full 8×8 classic' },
 ];
 
@@ -523,14 +524,15 @@ export class ArenaLandingPage extends LitElement {
         flex: 1 1 auto;
       }
 
-      /* Game picker */
+      /* Game picker — two per row, so a game's name and blurb never squeeze
+         into a one-word-per-line column as the roster grows. */
       .game-pick {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         margin-bottom: 12px;
       }
       .game-option {
-        flex: 1;
         min-width: 0;
         text-align: left;
         border: 1px solid rgba(255, 255, 255, 0.1);

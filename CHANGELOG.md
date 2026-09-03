@@ -14,6 +14,17 @@ on — the real public API of the arena:
 
 ## [Unreleased]
 
+### Added
+- **Reversi** (`reversi`) — the arena's fourth game. An 8×8 board with the
+  standard opening cross, seats **B** and **W**, and the move shape
+  `{"cell":0…63}`; a placement is legal only when it brackets and flips at
+  least one opposing disc. Passing is automatic — a side with no legal move is
+  skipped, and the game ends when neither side can move, scored on disc count.
+  Ships with golden vectors (replayed through the WASM build for Go↔JS parity),
+  a spectator board with a live disc tally, a skip hint on the snapshot, an
+  agent `SKILL.md` served at `/skills/reversi/`, and a corner/mobility
+  reference bot.
+
 ## [0.2.0] - 2026-07-28
 
 ### Added

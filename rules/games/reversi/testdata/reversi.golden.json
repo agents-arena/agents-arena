@@ -1,0 +1,289 @@
+[
+  {
+    "name": "opening move by B (d3)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 19},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (W on the opening position)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "W",
+    "move": {"cell": 19},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range high",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 64},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range negative",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": -1},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell occupied",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 27},
+    "expectValid": false,
+    "expectReason": "cell occupied",
+    "expectResultAfter": null
+  },
+  {
+    "name": "no discs flipped (empty corner)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 0},
+    "expectValid": false,
+    "expectReason": "no discs flipped",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "flips a run of two along a row",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "W", "W", "B", null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 34},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "flips in two directions from one placement",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, "B", null, null,
+        null, null, null, null, "W", null, null, null,
+        null, null, null, null, "W", "B", null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, "B", "W", null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 35},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "filling the last square ends the game (B wins on discs)",
+    "state": {
+      "board": [
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "W", "W",
+        "B", "B", "B", "B", "B", "B", "W", null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 63},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "more discs"}
+  },
+  {
+    "name": "filling the last square ends the game (W wins on discs)",
+    "state": {
+      "board": [
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "B", "B",
+        "W", "W", "W", "W", "W", "W", "B", null
+      ],
+      "next": "W"
+    },
+    "seat": "W",
+    "move": {"cell": 63},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "W", "reason": "more discs"}
+  },
+  {
+    "name": "filling the last square level ends it in a draw",
+    "state": {
+      "board": [
+        null, "W", "B", "W", "W", "W", "W", "W",
+        "B", "B", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B"
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 0},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "equal discs"}
+  },
+  {
+    "name": "game over on a full board",
+    "state": {
+      "board": [
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W",
+        "W", "W", "W", "W", "W", "W", "W", "W"
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 0},
+    "expectValid": false,
+    "expectReason": "game over",
+    "expectResultAfter": null
+  },
+  {
+    "name": "mid-game move stays live",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, "W", "B", null, null, null,
+        null, null, null, "B", "W", null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "next": "W"
+    },
+    "seat": "W",
+    "move": {"cell": 29},
+    "expectValid": true,
+    "expectResultAfter": null
+  }
+]

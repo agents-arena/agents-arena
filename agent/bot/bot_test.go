@@ -100,3 +100,137 @@ func TestC4ChooseNoLegalMove(t *testing.T) {
 		t.Errorf("c4Choose on a full board = %d, want -1", got)
 	}
 }
+
+// rvTestBoard builds a Reversi board from 8 rows of 8 runes, row 0 = top.
+// '.' is an empty square, 'B'/'W' are discs.
+func rvTestBoard(t *testing.T, rows ...string) [rvSize]string {
+	t.Helper()
+	if len(rows) != rvRows {
+		t.Fatalf("need %d rows, got %d", rvRows, len(rows))
+	}
+	var b [rvSize]string
+	for r, row := range rows {
+		if len(row) != rvCols {
+			t.Fatalf("row %d: need %d cells, got %d", r, rvCols, len(row))
+		}
+		for c, ch := range row {
+			if ch != '.' {
+				b[r*rvCols+c] = string(ch)
+			}
+		}
+	}
+	return b
+}
+
+func rvOpening() [rvSize]string {
+	var b [rvSize]string
+	b[27], b[36] = "W", "W"
+	b[28], b[35] = "B", "B"
+	return b
+}
+
+func TestRvLegalMatchesTheOpening(t *testing.T) {
+	got := rvLegal(rvOpening(), "B")
+	want := []int{19, 26, 37, 44}
+	if len(got) != len(want) {
+		t.Fatalf("legal = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("legal = %v, want %v", got, want)
+		}
+	}
+}
+
+func TestRvPlayFlipsTheBracketedRun(t *testing.T) {
+	after := rvPlay(rvOpening(), 19, "B")
+	if after[19] != "B" || after[27] != "B" {
+		t.Errorf("d3 should place on 19 and flip 27: [19]=%q [27]=%q", after[19], after[27])
+	}
+	if after[36] != "W" {
+		t.Errorf("e5 should be untouched, got %q", after[36])
+	}
+	if rvCount(after, "B") != 4 || rvCount(after, "W") != 1 {
+		t.Errorf("counts after d3 = B:%d W:%d, want B:4 W:1", rvCount(after, "B"), rvCount(after, "W"))
+	}
+}
+
+func TestRvChooseTakesTheCorner(t *testing.T) {
+	// Black can either take a8 (cell 0, permanent) or eat a fat row of discs in
+	// the middle. A disc-greedy bot picks the middle; this one takes the corner.
+	b := rvTestBoard(t,
+		".WB.....",
+		"........",
+		"........",
+		"...WB...",
+		"..WWWB..",
+		"........",
+		"........",
+		"........",
+	)
+	if got := rvChoose(b, "B"); got != 0 {
+		t.Errorf("rvChoose = %d, want 0 (the corner)", got)
+	}
+}
+
+func TestRvChooseAvoidsTheXSquareNextToAnEmptyCorner(t *testing.T) {
+	// Both moves are legal: cell 9 is the X-square guarding the empty a8 corner,
+	// cell 26 is a quiet centre move. The X-square must lose.
+	b := rvTestBoard(t,
+		"........",
+		"........",
+		"..W.....",
+		"...B....",
+		"........",
+		"....WB..",
+		"........",
+		"........",
+	)
+	legal := rvLegal(b, "B")
+	hasX := false
+	for _, c := range legal {
+		if c == 9 {
+			hasX = true
+		}
+	}
+	if !hasX {
+		t.Fatalf("test position should offer the X-square; legal = %v", legal)
+	}
+	if got := rvChoose(b, "B"); got == 9 {
+		t.Error("rvChoose took the X-square beside an empty corner")
+	}
+}
+
+func TestRvChooseGrabsDiscsInTheEndgame(t *testing.T) {
+	// Two equally-placed empty squares left, so the disc count is all that
+	// matters: cell 43 flips three discs, cell 20 flips one.
+	b := rvTestBoard(t,
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBB.WBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBB.WWWB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+	)
+	if got := rvChoose(b, "B"); got != 43 {
+		t.Errorf("rvChoose = %d, want 43 (the bigger endgame capture)", got)
+	}
+}
+
+func TestRvChooseReturnsNoMoveWhenStuck(t *testing.T) {
+	b := rvTestBoard(t,
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBBB",
+		"BBBBBBB.",
+	)
+	if got := rvChoose(b, "W"); got != -1 {
+		t.Errorf("rvChoose = %d, want -1", got)
+	}
+}

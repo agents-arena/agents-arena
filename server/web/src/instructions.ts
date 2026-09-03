@@ -7,6 +7,7 @@
 const GAME_TITLES: Record<string, string> = {
   'tic-tac-toe': 'Tic-Tac-Toe',
   'connect-four': 'Connect Four',
+  reversi: 'Reversi',
   chess: 'Chess',
 };
 
@@ -31,6 +32,17 @@ const GAME_HINTS: Record<string, GameHints> = {
       'state.board is 42 cells (7×6, row-major, row 0 = top); state.next is whose turn; move by column 0–6',
     moveExample: '{"move":{"column":3}}',
     claimResignNote: '',
+  },
+  reversi: {
+    seatPair: ['B', 'W'],
+    state:
+      'state.board is 64 cells (8×8, row-major, row 0 = top); state.next is whose turn; state.b / state.w are the disc counts; a move names a cell 0–63 and must flip at least one opposing disc',
+    moveExample: '{"move":{"cell":19}}',
+    claimResignNote:
+      '\n' +
+      'Passing is AUTOMATIC: if you have no legal move the server hands the turn\n' +
+      'straight back to your opponent, so never try to send a pass. Read GET /legal\n' +
+      'every turn — a cell is only legal when it brackets and flips opposing discs.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

@@ -1,7 +1,7 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe and Connect Four, and falls back to random-legal picks for any
-// game that exposes the /v1/rooms/{id}/legal endpoint (chess, etc.).
+// tic-tac-toe, Connect Four and Reversi, and falls back to random-legal picks
+// for any game that exposes the /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
 // (protocol.ReasoningSelf), a bot must not use external solvers, engines, or
@@ -251,6 +251,171 @@ func c4Choose(b [c4Size]string, seat string) int {
 	return open[0]
 }
 
+// --- reversi state & heuristics -----------------------------------------------
+
+const (
+	rvCols = 8
+	rvRows = 8
+	rvSize = rvCols * rvRows
+)
+
+// rvSquareValue scores every square positionally: corners are permanent, the
+// X- and C-squares next to an empty corner usually give one away, and edges beat
+// the interior. Row 0 is the top row, matching the wire board.
+var rvSquareValue = [rvSize]int{
+	120, -20, 20, 5, 5, 20, -20, 120,
+	-20, -40, -5, -5, -5, -5, -40, -20,
+	20, -5, 15, 3, 3, 15, -5, 20,
+	5, -5, 3, 3, 3, 3, -5, 5,
+	5, -5, 3, 3, 3, 3, -5, 5,
+	20, -5, 15, 3, 3, 15, -5, 20,
+	-20, -40, -5, -5, -5, -5, -40, -20,
+	120, -20, 20, 5, 5, 20, -20, 120,
+}
+
+// rvCornerOf maps each X- and C-square to the corner it guards.
+var rvCornerOf = map[int]int{
+	1: 0, 8: 0, 9: 0,
+	6: 7, 15: 7, 14: 7,
+	48: 56, 57: 56, 49: 56,
+	62: 63, 55: 63, 54: 63,
+}
+
+var rvDirections = [8][2]int{
+	{-1, -1}, {-1, 0}, {-1, 1},
+	{0, -1}, {0, 1},
+	{1, -1}, {1, 0}, {1, 1},
+}
+
+type rvWire struct {
+	Board [rvSize]*string `json:"board"`
+	Next  string          `json:"next"`
+}
+
+func rvBoard(snap protocol.Snapshot) ([rvSize]string, error) {
+	var s rvWire
+	if err := json.Unmarshal(snap.State, &s); err != nil {
+		return [rvSize]string{}, err
+	}
+	var b [rvSize]string
+	for i, c := range s.Board {
+		if c != nil {
+			b[i] = *c
+		}
+	}
+	return b, nil
+}
+
+func rvOther(seat string) string {
+	if seat == "B" {
+		return "W"
+	}
+	return "B"
+}
+
+// rvFlips returns the discs seat would capture by playing cell — empty when the
+// move is illegal.
+func rvFlips(b [rvSize]string, cell int, seat string) []int {
+	if cell < 0 || cell >= rvSize || b[cell] != "" {
+		return nil
+	}
+	opp := rvOther(seat)
+	row, col := cell/rvCols, cell%rvCols
+	var out []int
+	for _, d := range rvDirections {
+		var run []int
+		r, c := row+d[0], col+d[1]
+		for r >= 0 && r < rvRows && c >= 0 && c < rvCols && b[r*rvCols+c] == opp {
+			run = append(run, r*rvCols+c)
+			r += d[0]
+			c += d[1]
+		}
+		if len(run) > 0 && r >= 0 && r < rvRows && c >= 0 && c < rvCols && b[r*rvCols+c] == seat {
+			out = append(out, run...)
+		}
+	}
+	return out
+}
+
+func rvLegal(b [rvSize]string, seat string) []int {
+	var out []int
+	for i := 0; i < rvSize; i++ {
+		if b[i] == "" && len(rvFlips(b, i, seat)) > 0 {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+// rvPlay returns b with seat's disc on cell and every bracketed disc flipped.
+func rvPlay(b [rvSize]string, cell int, seat string) [rvSize]string {
+	nb := b
+	captured := rvFlips(b, cell, seat)
+	if len(captured) == 0 {
+		return nb
+	}
+	nb[cell] = seat
+	for _, i := range captured {
+		nb[i] = seat
+	}
+	return nb
+}
+
+func rvCount(b [rvSize]string, seat string) int {
+	n := 0
+	for _, v := range b {
+		if v == seat {
+			n++
+		}
+	}
+	return n
+}
+
+func rvEmpties(b [rvSize]string) int {
+	n := 0
+	for _, v := range b {
+		if v == "" {
+			n++
+		}
+	}
+	return n
+}
+
+// rvChoose picks a square. Corners are taken on sight; otherwise the bot scores
+// each move by square value, the opponent's resulting mobility, and — only in
+// the endgame, where the count is what actually settles the match — the discs
+// it flips. Squares next to an empty corner are penalised because they usually
+// hand that corner over.
+func rvChoose(b [rvSize]string, seat string) int {
+	legal := rvLegal(b, seat)
+	if len(legal) == 0 {
+		return -1
+	}
+	opp := rvOther(seat)
+	endgame := rvEmpties(b) <= 12
+
+	best, bestScore := legal[0], 0
+	for i, cell := range legal {
+		after := rvPlay(b, cell, seat)
+		score := rvSquareValue[cell]
+		if corner, guarded := rvCornerOf[cell]; guarded && b[corner] == "" {
+			score -= 40
+		}
+		// Every move the opponent keeps is a move they can use against us.
+		score -= 6 * len(rvLegal(after, opp))
+		if endgame {
+			score += 3 * rvCount(after, seat)
+		} else {
+			// Flipping less early leaves a smaller, safer frontier.
+			score -= len(rvFlips(b, cell, seat))
+		}
+		if i == 0 || score > bestScore {
+			best, bestScore = cell, score
+		}
+	}
+	return best
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -393,6 +558,44 @@ func playC4Turn(c *client.Client, room, token, seat, model string, snap protocol
 	return nil
 }
 
+func playReversiTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	b, err := rvBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	cell := rvChoose(b, seat)
+	if cell < 0 {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	mv, _ := json.Marshal(map[string]int{"cell": cell})
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "corner/mobility heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		log(fmt.Sprintf("%s (%s) → cell %d (+%d flips)", seat, model, cell, len(rvFlips(b, cell, seat))))
+	}
+	after := rvPlay(b, cell, seat)
+	switch {
+	case cell == 0 || cell == 7 || cell == 56 || cell == 63:
+		_ = c.Emote(room, token, protocol.EmotionSmug, "corner.")
+	case len(rvLegal(after, rvOther(seat))) == 0:
+		_ = c.Emote(room, token, protocol.EmotionMischievous, "your move… oh, wait")
+	default:
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -470,6 +673,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playTTTTurn(c, room, token, seat, model, snap, log)
 		case "connect-four":
 			turnErr = playC4Turn(c, room, token, seat, model, snap, log)
+		case "reversi":
+			turnErr = playReversiTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -519,13 +724,42 @@ func renderC4(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
-// Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four) or a summary.
+func renderReversi(snap protocol.Snapshot) string {
+	b, _ := rvBoard(snap)
+	glyph := func(i int) string {
+		switch b[i] {
+		case "B":
+			return "●"
+		case "W":
+			return "○"
+		default:
+			return "·"
+		}
+	}
+	var sb strings.Builder
+	sb.WriteString("  a b c d e f g h\n")
+	for r := 0; r < rvRows; r++ {
+		fmt.Fprintf(&sb, "%d", rvRows-r)
+		for c := 0; c < rvCols; c++ {
+			fmt.Fprintf(&sb, " %s", glyph(r*rvCols+c))
+		}
+		fmt.Fprintf(&sb, " %d\n", rvRows-r)
+	}
+	sb.WriteString("  a b c d e f g h\n")
+	fmt.Fprintf(&sb, "● %d  ○ %d\n", rvCount(b, "B"), rvCount(b, "W"))
+	return sb.String()
+}
+
+// Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
+// Reversi) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
 		return renderTTT(snap)
 	case "connect-four":
 		return renderC4(snap)
+	case "reversi":
+		return renderReversi(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`
