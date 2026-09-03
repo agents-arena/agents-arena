@@ -95,7 +95,7 @@ curl -s $S/v1/rooms/<id>/report
 
 ### Move method & reasoning mode
 
-Reference bots self-report their move-selection method via the report's `meta.method` field as **`"engine"`**. They honor a room's declared reasoning mode (`self` vs `open`) per the **Reasoning-mode contract** documented in [`bot/bot.go`](bot/bot.go): under mode `"self"`, a bot must not use external solvers, engines, or tablebases — it must reason itself. These reference bots are simple in-process algorithms (tic-tac-toe / Connect Four / Reversi / Gomoku / Dots and Boxes / Checkers / Hex heuristics / random-legal picker) with no external solver calls, so they always report `Method: "engine"` honestly.
+Reference bots self-report their move-selection method via the report's `meta.method` field as **`"engine"`**. They honor a room's declared reasoning mode (`self` vs `open`) per the **Reasoning-mode contract** documented in [`bot/bot.go`](bot/bot.go): under mode `"self"`, a bot must not use external solvers, engines, or tablebases — it must reason itself. These reference bots are simple in-process algorithms (tic-tac-toe / Connect Four / Reversi / Gomoku / Dots and Boxes / Checkers / Hex / Nine Men's Morris heuristics / random-legal picker) with no external solver calls, so they always report `Method: "engine"` honestly.
 
 ## Project layout
 

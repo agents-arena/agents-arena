@@ -21,6 +21,7 @@ import type {
   DotsAndBoxesState,
   GomokuState,
   HexState,
+  MorrisState,
   ReversiState,
   Snapshot,
   TttState,
@@ -35,6 +36,7 @@ import '../components/gomoku-watch-board.js';
 import '../components/dab-watch-board.js';
 import '../components/checkers-watch-board.js';
 import '../components/hex-watch-board.js';
+import '../components/morris-watch-board.js';
 
 /** Friendly display name per game id. */
 const GAME_NAMES: Record<string, string> = {
@@ -45,6 +47,7 @@ const GAME_NAMES: Record<string, string> = {
   'dots-and-boxes': 'Dots and Boxes',
   checkers: 'Checkers',
   hex: 'Hex',
+  'nine-mens-morris': "Nine Men's Morris",
   chess: 'Chess',
 };
 
@@ -57,6 +60,7 @@ const DEFAULT_SEATS: Record<string, string[]> = {
   'dots-and-boxes': ['A', 'B'],
   checkers: ['R', 'B'],
   hex: ['R', 'B'],
+  'nine-mens-morris': ['W', 'B'],
   chess: ['white', 'black'],
 };
 
@@ -71,6 +75,8 @@ const FELT: Record<string, string> = {
     'radial-gradient(120% 140% at 50% -10%, #262133 0%, #1a1726 55%, #110f1a 100%)',
   checkers: 'radial-gradient(130% 150% at 50% -10%, #33241a 0%, #211710 55%, #150e09 100%)',
   hex: 'radial-gradient(120% 140% at 50% -10%, #1b2436 0%, #131a28 55%, #0c111a 100%)',
+  'nine-mens-morris':
+    'radial-gradient(120% 140% at 50% -10%, #35281a 0%, #241b11 55%, #17110a 100%)',
 };
 
 /** Format a think time compactly: "850ms", "2.6s", "1m 03s". */
@@ -734,6 +740,19 @@ export class ArenaWatchPage extends LitElement {
     return typeof state?.last === 'number' ? state.last : null;
   }
 
+  private _morris(snap: Snapshot | null): MorrisState {
+    const state = snap?.state as Partial<MorrisState> | undefined;
+    return {
+      board:
+        state && Array.isArray(state.board) && state.board.length === 24
+          ? state.board
+          : new Array<string | null>(24).fill(null),
+      next: typeof state?.next === 'string' ? state.next : 'W',
+      handW: typeof state?.handW === 'number' ? state.handW : 9,
+      handB: typeof state?.handB === 'number' ? state.handB : 9,
+    };
+  }
+
   private _seats(snap: Snapshot): string[] {
     if (snap.players.length >= 2) return snap.players.map((p) => p.seat);
     return DEFAULT_SEATS[snap.gameId] ?? ['X', 'O'];
@@ -977,6 +996,7 @@ export class ArenaWatchPage extends LitElement {
     if (gameId === 'dots-and-boxes') return this._renderDabStage(snap);
     if (gameId === 'checkers') return this._renderCheckersStage(snap);
     if (gameId === 'hex') return this._renderHexStage(snap);
+    if (gameId === 'nine-mens-morris') return this._renderMorrisStage(snap);
     return this._renderTttStage(snap);
   }
 
@@ -1098,6 +1118,23 @@ export class ArenaWatchPage extends LitElement {
           next=${this._hexNext(snap)}
           .last=${this._hexLast(snap)}
         ></hex-watch-board>
+        <div class="underboard" style="justify-content:center">
+          ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderMorrisStage(snap: Snapshot | null) {
+    const m = this._morris(snap);
+    return html`
+      <div class="felt ttt" style=${`--felt:${FELT['nine-mens-morris']}`}>
+        <morris-watch-board
+          .cells=${m.board}
+          next=${m.next}
+          .handW=${m.handW}
+          .handB=${m.handB}
+        ></morris-watch-board>
         <div class="underboard" style="justify-content:center">
           ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
         </div>

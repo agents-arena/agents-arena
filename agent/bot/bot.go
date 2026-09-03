@@ -1,8 +1,8 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers and
-// Hex, and falls back to random-legal picks for any game that exposes the
-// /v1/rooms/{id}/legal endpoint (chess, etc.).
+// tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex
+// and Nine Men's Morris, and falls back to random-legal picks for any game
+// that exposes the /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
 // (protocol.ReasoningSelf), a bot must not use external solvers, engines, or
@@ -1198,6 +1198,259 @@ func hxChoose(b [hxSize]string, seat string) int {
 	return best
 }
 
+// --- nine men's morris state & heuristics --------------------------------------
+
+const mmPoints = 24
+
+var mmMills = [16][3]int{
+	{0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+	{9, 10, 11}, {12, 13, 14},
+	{15, 16, 17}, {18, 19, 20}, {21, 22, 23},
+	{0, 9, 21}, {3, 10, 18}, {6, 11, 15},
+	{1, 4, 7}, {16, 19, 22},
+	{8, 12, 17}, {5, 13, 20}, {2, 14, 23},
+}
+
+var mmNeighbours = [mmPoints][]int{
+	0: {1, 9}, 1: {0, 2, 4}, 2: {1, 14},
+	3: {4, 10}, 4: {1, 3, 5, 7}, 5: {4, 13},
+	6: {7, 11}, 7: {4, 6, 8}, 8: {7, 12},
+	9: {0, 10, 21}, 10: {3, 9, 11, 18}, 11: {6, 10, 15},
+	12: {8, 13, 17}, 13: {5, 12, 14, 20}, 14: {2, 13, 23},
+	15: {11, 16}, 16: {15, 17, 19}, 17: {12, 16, 20},
+	18: {10, 19}, 19: {16, 18, 20, 22}, 20: {13, 17, 19},
+	21: {9, 22}, 22: {19, 21, 23}, 23: {14, 22},
+}
+
+type mmWire struct {
+	Board [mmPoints]*string `json:"board"`
+	Next  string            `json:"next"`
+	HandW int               `json:"handW"`
+	HandB int               `json:"handB"`
+}
+
+// mmPos is what the bot needs from a snapshot.
+type mmPos struct {
+	board [mmPoints]string
+	handW int
+	handB int
+}
+
+type mmMove struct {
+	From   *int `json:"from,omitempty"`
+	To     int  `json:"to"`
+	Remove *int `json:"remove,omitempty"`
+}
+
+func mmBoard(snap protocol.Snapshot) (mmPos, error) {
+	var w mmWire
+	if err := json.Unmarshal(snap.State, &w); err != nil {
+		return mmPos{}, err
+	}
+	p := mmPos{handW: w.HandW, handB: w.HandB}
+	for i, c := range w.Board {
+		if c != nil {
+			p.board[i] = *c
+		}
+	}
+	return p, nil
+}
+
+func mmOther(seat string) string {
+	if seat == "W" {
+		return "B"
+	}
+	return "W"
+}
+
+func mmHand(p mmPos, seat string) int {
+	if seat == "W" {
+		return p.handW
+	}
+	return p.handB
+}
+
+func mmCount(b [mmPoints]string, seat string) int {
+	n := 0
+	for _, v := range b {
+		if v == seat {
+			n++
+		}
+	}
+	return n
+}
+
+func mmMillAt(b [mmPoints]string, point int, seat string) bool {
+	for _, m := range mmMills {
+		if m[0] != point && m[1] != point && m[2] != point {
+			continue
+		}
+		if b[m[0]] == seat && b[m[1]] == seat && b[m[2]] == seat {
+			return true
+		}
+	}
+	return false
+}
+
+// mmRemovable lists the opposing men that may be taken: those outside a mill,
+// or all of them when every one is inside one.
+func mmRemovable(b [mmPoints]string, victim string) []int {
+	var open, all []int
+	for i := 0; i < mmPoints; i++ {
+		if b[i] != victim {
+			continue
+		}
+		all = append(all, i)
+		if !mmMillAt(b, i, victim) {
+			open = append(open, i)
+		}
+	}
+	if len(open) > 0 {
+		return open
+	}
+	return all
+}
+
+// mmWouldMill reports whether seat placing a man on point closes a mill there.
+func mmWouldMill(b [mmPoints]string, point int, seat string) bool {
+	if b[point] != "" {
+		return false
+	}
+	nb := b
+	nb[point] = seat
+	return mmMillAt(nb, point, seat)
+}
+
+// mmLegal enumerates every legal move including the removal choice, mirroring
+// the server's rules so the bot never proposes something that gets refused.
+func mmLegal(p mmPos, seat string) []mmMove {
+	var out []mmMove
+	add := func(from *int, to int) {
+		nb := p.board
+		if from != nil {
+			nb[*from] = ""
+		}
+		nb[to] = seat
+		if mmMillAt(nb, to, seat) {
+			for _, r := range mmRemovable(nb, mmOther(seat)) {
+				rr := r
+				out = append(out, mmMove{From: from, To: to, Remove: &rr})
+			}
+			return
+		}
+		out = append(out, mmMove{From: from, To: to})
+	}
+	if mmHand(p, seat) > 0 {
+		for to := 0; to < mmPoints; to++ {
+			if p.board[to] == "" {
+				add(nil, to)
+			}
+		}
+		return out
+	}
+	flying := mmCount(p.board, seat) == 3
+	for from := 0; from < mmPoints; from++ {
+		if p.board[from] != seat {
+			continue
+		}
+		if flying {
+			for to := 0; to < mmPoints; to++ {
+				if p.board[to] == "" {
+					f := from
+					add(&f, to)
+				}
+			}
+			continue
+		}
+		for _, to := range mmNeighbours[from] {
+			if p.board[to] == "" {
+				f := from
+				add(&f, to)
+			}
+		}
+	}
+	return out
+}
+
+// mmThreats counts the points where seat could close a mill on their next move.
+func mmThreats(b [mmPoints]string, seat string) int {
+	n := 0
+	for i := 0; i < mmPoints; i++ {
+		if mmWouldMill(b, i, seat) {
+			n++
+		}
+	}
+	return n
+}
+
+// mmMobility counts the moves seat has available from a position, which is what
+// decides the endgame: a side with no move loses.
+func mmMobility(b [mmPoints]string, seat string, hand int) int {
+	if hand > 0 {
+		n := 0
+		for i := 0; i < mmPoints; i++ {
+			if b[i] == "" {
+				n++
+			}
+		}
+		return n
+	}
+	if mmCount(b, seat) == 3 {
+		return 3 * 21
+	}
+	n := 0
+	for from := 0; from < mmPoints; from++ {
+		if b[from] != seat {
+			continue
+		}
+		for _, to := range mmNeighbours[from] {
+			if b[to] == "" {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// mmChoose picks a move: close a mill, deny the opponent's, then favour
+// material, mill threats and mobility.
+func mmChoose(p mmPos, seat string) (mmMove, bool) {
+	moves := mmLegal(p, seat)
+	if len(moves) == 0 {
+		return mmMove{}, false
+	}
+	opp := mmOther(seat)
+	best, bestScore := moves[0], 0
+	for i, m := range moves {
+		nb := p.board
+		if m.From != nil {
+			nb[*m.From] = ""
+		}
+		nb[m.To] = seat
+		score := 0
+		if m.Remove != nil {
+			nb[*m.Remove] = ""
+			score += 100
+			// Prefer breaking up a man that was about to become a mill.
+			if mmThreats(p.board, opp) > mmThreats(nb, opp) {
+				score += 20
+			}
+		}
+		// Occupying a point the opponent needed denies them a mill.
+		if mmWouldMill(p.board, m.To, opp) {
+			score += 60
+		}
+		score += 12 * (mmCount(nb, seat) - mmCount(nb, opp))
+		score += 8 * mmThreats(nb, seat)
+		score -= 8 * mmThreats(nb, opp)
+		score += mmMobility(nb, seat, mmHand(p, seat)) - mmMobility(nb, opp, mmHand(p, opp))
+		if i == 0 || score > bestScore {
+			best, bestScore = m, score
+		}
+	}
+	return best, true
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -1532,6 +1785,49 @@ func playHexTurn(c *client.Client, room, token, seat, model string, snap protoco
 	return nil
 }
 
+func playMorrisTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	p, err := mmBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	m, ok := mmChoose(p, seat)
+	if !ok {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	mv, _ := json.Marshal(m)
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "mill/threat/mobility heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		switch {
+		case m.Remove != nil && m.From != nil:
+			log(fmt.Sprintf("%s (%s) %d → %d, mill! takes %d", seat, model, *m.From, m.To, *m.Remove))
+		case m.Remove != nil:
+			log(fmt.Sprintf("%s (%s) places %d, mill! takes %d", seat, model, m.To, *m.Remove))
+		case m.From != nil:
+			log(fmt.Sprintf("%s (%s) %d → %d", seat, model, *m.From, m.To))
+		default:
+			log(fmt.Sprintf("%s (%s) places %d", seat, model, m.To))
+		}
+	}
+	if m.Remove != nil {
+		_ = c.Emote(room, token, protocol.EmotionSmug, "")
+	} else {
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -1619,6 +1915,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playCheckersTurn(c, room, token, seat, model, snap, log)
 		case "hex":
 			turnErr = playHexTurn(c, room, token, seat, model, snap, log)
+		case "nine-mens-morris":
+			turnErr = playMorrisTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -1807,8 +2105,48 @@ func renderHex(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
+func renderMorris(snap protocol.Snapshot) string {
+	p, err := mmBoard(snap)
+	if err != nil {
+		return fmt.Sprintf("game: nine-mens-morris\nstate: %s", string(snap.State))
+	}
+	at := func(i int) string {
+		switch p.board[i] {
+		case "W":
+			return "W"
+		case "B":
+			return "B"
+		default:
+			return "·"
+		}
+	}
+	rows := []string{
+		fmt.Sprintf("%s-----------%s-----------%s", at(0), at(1), at(2)),
+		"|           |           |",
+		fmt.Sprintf("|   %s-------%s-------%s   |", at(3), at(4), at(5)),
+		"|   |       |       |   |",
+		fmt.Sprintf("|   |   %s---%s---%s   |   |", at(6), at(7), at(8)),
+		"|   |   |       |   |   |",
+		fmt.Sprintf("%s---%s---%s       %s---%s---%s", at(9), at(10), at(11), at(12), at(13), at(14)),
+		"|   |   |       |   |   |",
+		fmt.Sprintf("|   |   %s---%s---%s   |   |", at(15), at(16), at(17)),
+		"|   |       |       |   |",
+		fmt.Sprintf("|   %s-------%s-------%s   |", at(18), at(19), at(20)),
+		"|           |           |",
+		fmt.Sprintf("%s-----------%s-----------%s", at(21), at(22), at(23)),
+	}
+	var sb strings.Builder
+	for _, r := range rows {
+		sb.WriteString(r)
+		sb.WriteByte('\n')
+	}
+	fmt.Fprintf(&sb, "in hand: W %d  B %d\n", p.handW, p.handB)
+	return sb.String()
+}
+
 // Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
-// Reversi / Gomoku / Dots and Boxes / Checkers / Hex) or a summary.
+// Reversi / Gomoku / Dots and Boxes / Checkers / Hex / Nine Men's Morris) or a
+// summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
@@ -1825,6 +2163,8 @@ func Render(snap protocol.Snapshot) string {
 		return renderCheckers(snap)
 	case "hex":
 		return renderHex(snap)
+	case "nine-mens-morris":
+		return renderMorris(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`

@@ -1,0 +1,335 @@
+[
+  {
+    "name": "opening placement by W",
+    "state": {
+      "board": [
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 9,
+      "handB": 9,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 0},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (B on an empty board)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 9,
+      "handB": 9,
+      "idle": 0
+    },
+    "seat": "B",
+    "move": {"to": 0},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "point out of range",
+    "state": {
+      "board": [
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 9,
+      "handB": 9,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 24},
+    "expectValid": false,
+    "expectReason": "point out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "point occupied",
+    "state": {
+      "board": [
+        "W", null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "B",
+      "handW": 8,
+      "handB": 9,
+      "idle": 0
+    },
+    "seat": "B",
+    "move": {"to": 0},
+    "expectValid": false,
+    "expectReason": "point occupied",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "board": [
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 9,
+      "handB": 9,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "point out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "sliding during the placement phase",
+    "state": {
+      "board": [
+        "W", null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 8,
+      "handB": 8,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"from": 0, "to": 1},
+    "expectValid": false,
+    "expectReason": "place a man before moving one",
+    "expectResultAfter": null
+  },
+  {
+    "name": "closing a mill without naming a removal",
+    "state": {
+      "board": [
+        "W", "W", null, null, null, null,
+        null, null, null, "B", "B", null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 1,
+      "handB": 1,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 2},
+    "expectValid": false,
+    "expectReason": "your move closes a mill \u2014 name the man to remove",
+    "expectResultAfter": null
+  },
+  {
+    "name": "closing a mill and removing a man",
+    "state": {
+      "board": [
+        "W", "W", null, null, null, null,
+        null, null, null, "B", "B", null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 1,
+      "handB": 1,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 2, "remove": 9},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "removing a man when no mill was closed",
+    "state": {
+      "board": [
+        "W", null, null, null, null, null,
+        null, null, null, "B", null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null
+      ],
+      "next": "W",
+      "handW": 5,
+      "handB": 5,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 1, "remove": 9},
+    "expectValid": false,
+    "expectReason": "that move does not close a mill",
+    "expectResultAfter": null
+  },
+  {
+    "name": "taking a man inside a mill while a loose man exists",
+    "state": {
+      "board": [
+        "W", "W", null, null, "W", null,
+        null, "W", null, "B", "B", "B",
+        null, null, null, null, null, null,
+        null, null, null, "B", null, null
+      ],
+      "next": "W",
+      "handW": 1,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 2, "remove": 9},
+    "expectValid": false,
+    "expectReason": "that man is in a mill \u2014 take one that is not",
+    "expectResultAfter": null
+  },
+  {
+    "name": "taking the loose man instead",
+    "state": {
+      "board": [
+        "W", "W", null, null, "W", null,
+        null, "W", null, "B", "B", "B",
+        null, null, null, null, null, null,
+        null, null, null, "B", null, null
+      ],
+      "next": "W",
+      "handW": 1,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"to": 2, "remove": 21},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "sliding to an adjacent point",
+    "state": {
+      "board": [
+        "W", null, "B", null, "W", "B",
+        null, null, null, "W", null, null,
+        null, null, "B", null, null, null,
+        null, null, null, "W", null, "B"
+      ],
+      "next": "W",
+      "handW": 0,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"from": 0, "to": 1},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "sliding across the board",
+    "state": {
+      "board": [
+        "W", null, "B", null, "W", "B",
+        null, null, null, "W", null, null,
+        null, null, "B", null, null, null,
+        null, null, null, "W", null, "B"
+      ],
+      "next": "W",
+      "handW": 0,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"from": 0, "to": 22},
+    "expectValid": false,
+    "expectReason": "points are not adjacent",
+    "expectResultAfter": null
+  },
+  {
+    "name": "three men may fly anywhere",
+    "state": {
+      "board": [
+        "W", null, "B", null, "W", "B",
+        null, null, null, null, null, null,
+        null, null, "B", null, null, null,
+        null, null, null, "W", null, "B"
+      ],
+      "next": "W",
+      "handW": 0,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"from": 0, "to": 19},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "taking the third black man wins",
+    "state": {
+      "board": [
+        "W", null, null, null, null, null,
+        null, null, null, "W", null, null,
+        "W", null, null, null, null, null,
+        "B", "B", "B", null, "W", null
+      ],
+      "next": "W",
+      "handW": 0,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "W",
+    "move": {"from": 22, "to": 21, "remove": 19},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "W", "reason": "reduced to two men"}
+  },
+  {
+    "name": "a quiet move at the idle limit draws",
+    "state": {
+      "board": [
+        "W", null, "B", null, "W", "B",
+        null, null, null, "W", null, null,
+        null, null, "B", null, null, null,
+        null, null, null, "W", null, "B"
+      ],
+      "next": "W",
+      "handW": 0,
+      "handB": 0,
+      "idle": 49
+    },
+    "seat": "W",
+    "move": {"from": 0, "to": 1},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "no mills"}
+  },
+  {
+    "name": "game over once a side is reduced",
+    "state": {
+      "board": [
+        "W", "W", "W", null, null, null,
+        null, null, null, null, null, null,
+        null, null, null, null, null, null,
+        "B", "B", null, null, null, null
+      ],
+      "next": "B",
+      "handW": 0,
+      "handB": 0,
+      "idle": 0
+    },
+    "seat": "B",
+    "move": {"from": 18, "to": 10},
+    "expectValid": false,
+    "expectReason": "game over",
+    "expectResultAfter": null
+  }
+]

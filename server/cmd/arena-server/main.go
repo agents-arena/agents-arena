@@ -24,6 +24,7 @@ import (
 	_ "github.com/agents-arena/agents-arena/rules/games/dotsandboxes"
 	_ "github.com/agents-arena/agents-arena/rules/games/gomoku"
 	_ "github.com/agents-arena/agents-arena/rules/games/hex"
+	_ "github.com/agents-arena/agents-arena/rules/games/ninemensmorris"
 	_ "github.com/agents-arena/agents-arena/rules/games/reversi"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 )

@@ -717,3 +717,110 @@ func TestHexSelfPlayIsSane(t *testing.T) {
 	}
 	t.Fatal("self-play filled the board without a connection")
 }
+
+// mmTestPos builds a Nine Men's Morris position: men on points, plus hands.
+func mmTestPos(handW, handB int, men map[int]string) mmPos {
+	p := mmPos{handW: handW, handB: handB}
+	for point, seat := range men {
+		p.board[point] = seat
+	}
+	return p
+}
+
+func TestMmChooseClosesAMill(t *testing.T) {
+	// White has 0 and 1 and a man in hand: placing on 2 closes the top mill.
+	p := mmTestPos(3, 3, map[int]string{0: "W", 1: "W", 9: "B", 12: "B"})
+	m, ok := mmChoose(p, "W")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	if m.To != 2 || m.Remove == nil {
+		t.Fatalf("mmChoose = %+v, want a placement on 2 that removes a man", m)
+	}
+	if p.board[*m.Remove] != "B" {
+		t.Errorf("removal targets %d, which holds %q", *m.Remove, p.board[*m.Remove])
+	}
+}
+
+func TestMmChooseBlocksTheOpponentsMill(t *testing.T) {
+	// Black threatens 9-10-11 and white has nothing of its own going, so the
+	// only sensible move is to take point 11.
+	p := mmTestPos(3, 3, map[int]string{9: "B", 10: "B", 4: "W", 20: "W"})
+	m, ok := mmChoose(p, "W")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	if m.To != 11 {
+		t.Errorf("mmChoose = %+v, want a placement on 11 to block", m)
+	}
+}
+
+func TestMmChooseNeverTakesAProtectedMan(t *testing.T) {
+	// Black's 9-10-11 is a mill and 21 is loose, so a capture must take 21.
+	p := mmTestPos(1, 0, map[int]string{
+		0: "W", 1: "W", 4: "W", 7: "W",
+		9: "B", 10: "B", 11: "B", 21: "B",
+	})
+	m, ok := mmChoose(p, "W")
+	if !ok {
+		t.Fatal("no move found")
+	}
+	if m.Remove == nil {
+		t.Fatalf("mmChoose = %+v, want the mill-closing move", m)
+	}
+	if *m.Remove != 21 {
+		t.Errorf("removal = %d, want 21 (the only man outside a mill)", *m.Remove)
+	}
+}
+
+func TestMmLegalRespectsThePhases(t *testing.T) {
+	// Placement: every empty point, and no sliding.
+	p := mmTestPos(5, 5, map[int]string{0: "W"})
+	for _, m := range mmLegal(p, "W") {
+		if m.From != nil {
+			t.Fatalf("placement phase produced a slide: %+v", m)
+		}
+	}
+	if n := len(mmLegal(p, "W")); n != mmPoints-1 {
+		t.Errorf("placement moves = %d, want %d", n, mmPoints-1)
+	}
+
+	// Movement: slides along lines only.
+	moving := mmTestPos(0, 0, map[int]string{0: "W", 4: "W", 9: "W", 21: "W", 2: "B", 5: "B", 14: "B", 23: "B"})
+	for _, m := range mmLegal(moving, "W") {
+		if m.From == nil {
+			t.Fatalf("movement phase produced a placement: %+v", m)
+		}
+		adjacent := false
+		for _, n := range mmNeighbours[*m.From] {
+			if n == m.To {
+				adjacent = true
+			}
+		}
+		if !adjacent {
+			t.Errorf("slide %d → %d is not along a line", *m.From, m.To)
+		}
+	}
+
+	// Flying: three men may go anywhere empty.
+	flying := mmTestPos(0, 0, map[int]string{0: "W", 4: "W", 21: "W", 2: "B", 5: "B", 14: "B"})
+	far := false
+	for _, m := range mmLegal(flying, "W") {
+		if *m.From == 0 && m.To == 19 {
+			far = true
+		}
+	}
+	if !far {
+		t.Error("a three-man side should be able to fly across the board")
+	}
+}
+
+func TestMmChooseReturnsNoMoveWhenBlocked(t *testing.T) {
+	p := mmTestPos(0, 0, map[int]string{
+		0: "W", 1: "W", 2: "W", 4: "W",
+		9: "B", 14: "B", 7: "B", 3: "B", 5: "B",
+	})
+	if _, ok := mmChoose(p, "W"); ok {
+		t.Error("mmChoose found a move for a fully blocked side")
+	}
+}
