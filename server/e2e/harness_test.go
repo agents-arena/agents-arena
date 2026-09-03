@@ -29,6 +29,7 @@ import (
 	// same roster the shipped server serves.
 	_ "github.com/agents-arena/agents-arena/rules/games/chess"
 	_ "github.com/agents-arena/agents-arena/rules/games/connectfour"
+	_ "github.com/agents-arena/agents-arena/rules/games/dotsandboxes"
 	_ "github.com/agents-arena/agents-arena/rules/games/gomoku"
 	_ "github.com/agents-arena/agents-arena/rules/games/reversi"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
@@ -209,7 +210,7 @@ func (a *arena) playOut(t *testing.T, roomID string, tokens map[string]string, r
 // up in the report and the archive with a coherent record.
 func TestEveryGamePlaysThroughTheAPI(t *testing.T) {
 	games := spec.All()
-	if len(games) < 5 {
+	if len(games) < 6 {
 		t.Fatalf("expected the server's game roster to be registered, got %d", len(games))
 	}
 

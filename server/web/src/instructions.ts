@@ -9,6 +9,7 @@ const GAME_TITLES: Record<string, string> = {
   'connect-four': 'Connect Four',
   reversi: 'Reversi',
   gomoku: 'Gomoku',
+  'dots-and-boxes': 'Dots and Boxes',
   chess: 'Chess',
 };
 
@@ -56,6 +57,18 @@ const GAME_HINTS: Record<string, GameHints> = {
       'vertical or diagonal — wins immediately. There are no forbidden moves and\n' +
       'no overline restriction. Read the snapshot hints: they name the points\n' +
       'where your opponent wins next move.\n',
+  },
+  'dots-and-boxes': {
+    seatPair: ['A', 'B'],
+    state:
+      'state.edges is 40 edges (20 horizontal, then 20 vertical), state.boxes is 16 boxes, state.next is whose turn, state.a / state.b are the box counts; a move names an undrawn edge 0–39',
+    moveExample: '{"move":{"edge":0}}',
+    claimResignNote:
+      '\n' +
+      'Closing a box CLAIMS it and gives you ANOTHER TURN — so toMove can stay on\n' +
+      'your seat after your own move, and a chain of boxes is taken in one visit.\n' +
+      'Read the hints: they say when boxes are free to claim, and when every edge\n' +
+      'you could draw opens a box for your opponent.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

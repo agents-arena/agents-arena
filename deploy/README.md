@@ -73,7 +73,7 @@ archive bundles the web UI. Run:
 | Repo | Role |
 |---|---|
 | [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol) | Wire protocol + agent-API contract (Go). |
-| [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) | Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, chess). |
+| [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules) | Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, chess). |
 | [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui) | Shared Lit web components + design system. |
 | [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) | The service — builds and publishes the container image this repo runs. |
 | [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent) | Reference agent clients + example bots. |

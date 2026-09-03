@@ -1,8 +1,8 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe, Connect Four, Reversi and Gomoku, and falls back to
-// random-legal picks for any game that exposes the /v1/rooms/{id}/legal
-// endpoint (chess, etc.).
+// tic-tac-toe, Connect Four, Reversi, Gomoku and Dots and Boxes, and falls
+// back to random-legal picks for any game that exposes the
+// /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
 // (protocol.ReasoningSelf), a bot must not use external solvers, engines, or
@@ -635,6 +635,178 @@ func gmChoose(b [gmSize]string, seat string) int {
 	return best
 }
 
+// --- dots and boxes state & heuristics ----------------------------------------
+
+const (
+	dbDots   = 5
+	dbBoxCol = dbDots - 1               // 4
+	dbBoxRow = dbDots - 1               // 4
+	dbBoxes  = dbBoxRow * dbBoxCol      // 16
+	dbNumH   = dbDots * dbBoxCol        // 20
+	dbEdges  = dbNumH + dbBoxRow*dbDots // 40
+)
+
+type dbWire struct {
+	Edges [dbEdges]*string `json:"edges"`
+	Boxes [dbBoxes]*string `json:"boxes"`
+	Next  string           `json:"next"`
+}
+
+// dbGrid is the drawn/undrawn state of every edge.
+type dbGrid [dbEdges]bool
+
+func dbBoard(snap protocol.Snapshot) (dbGrid, error) {
+	var s dbWire
+	if err := json.Unmarshal(snap.State, &s); err != nil {
+		return dbGrid{}, err
+	}
+	var g dbGrid
+	for i, e := range s.Edges {
+		g[i] = e != nil
+	}
+	return g, nil
+}
+
+func dbH(r, c int) int { return r*dbBoxCol + c }
+func dbV(r, c int) int { return dbNumH + r*dbDots + c }
+
+func dbBoxEdges(box int) [4]int {
+	r, c := box/dbBoxCol, box%dbBoxCol
+	return [4]int{dbH(r, c), dbH(r+1, c), dbV(r, c), dbV(r, c+1)}
+}
+
+func dbBoxesTouching(edge int) []int {
+	var out []int
+	if edge < dbNumH {
+		r, c := edge/dbBoxCol, edge%dbBoxCol
+		if r > 0 {
+			out = append(out, (r-1)*dbBoxCol+c)
+		}
+		if r < dbBoxRow {
+			out = append(out, r*dbBoxCol+c)
+		}
+		return out
+	}
+	v := edge - dbNumH
+	r, c := v/dbDots, v%dbDots
+	if c > 0 {
+		out = append(out, r*dbBoxCol+(c-1))
+	}
+	if c < dbBoxCol {
+		out = append(out, r*dbBoxCol+c)
+	}
+	return out
+}
+
+func dbSides(g dbGrid, box int) int {
+	n := 0
+	for _, e := range dbBoxEdges(box) {
+		if g[e] {
+			n++
+		}
+	}
+	return n
+}
+
+// dbClaims counts the boxes drawing edge would close.
+func dbClaims(g dbGrid, edge int) int {
+	n := 0
+	for _, box := range dbBoxesTouching(edge) {
+		if dbSides(g, box) == 3 {
+			n++
+		}
+	}
+	return n
+}
+
+// dbOpens counts the boxes drawing edge would leave on three sides — each one a
+// free box for the opponent.
+func dbOpens(g dbGrid, edge int) int {
+	n := 0
+	for _, box := range dbBoxesTouching(edge) {
+		if dbSides(g, box) == 2 {
+			n++
+		}
+	}
+	return n
+}
+
+// dbChainSize measures how much a sacrifice really costs: from each box the
+// edge opens, walk through neighbouring boxes that are also nearly closed, since
+// the opponent takes the whole chain in one visit.
+func dbChainSize(g dbGrid, edge int) int {
+	after := g
+	after[edge] = true
+	seen := map[int]bool{}
+	var queue []int
+	for _, box := range dbBoxesTouching(edge) {
+		if dbSides(after, box) == 3 {
+			queue = append(queue, box)
+		}
+	}
+	size := 0
+	for len(queue) > 0 {
+		box := queue[0]
+		queue = queue[1:]
+		if seen[box] {
+			continue
+		}
+		seen[box] = true
+		size++
+		// Taking this box opens its remaining edge; anything behind it falls too.
+		for _, e := range dbBoxEdges(box) {
+			if after[e] {
+				continue
+			}
+			for _, nb := range dbBoxesTouching(e) {
+				if nb != box && !seen[nb] && dbSides(after, nb) >= 2 {
+					queue = append(queue, nb)
+				}
+			}
+		}
+	}
+	return size
+}
+
+// dbChoose picks an edge: close a box if one is there (taking the double when
+// offered), otherwise play a safe edge, and if every edge is a sacrifice, give
+// away the shortest chain.
+func dbChoose(g dbGrid, _ string) int {
+	free := -1
+	freeClaims := 0
+	safe := -1
+	sacrifice := -1
+	sacrificeCost := 0
+	for e := 0; e < dbEdges; e++ {
+		if g[e] {
+			continue
+		}
+		if claims := dbClaims(g, e); claims > 0 {
+			if claims > freeClaims {
+				free, freeClaims = e, claims
+			}
+			continue
+		}
+		if dbOpens(g, e) == 0 {
+			if safe < 0 {
+				safe = e
+			}
+			continue
+		}
+		if cost := dbChainSize(g, e); sacrifice < 0 || cost < sacrificeCost {
+			sacrifice, sacrificeCost = e, cost
+		}
+	}
+	switch {
+	case free >= 0:
+		return free
+	case safe >= 0:
+		return safe
+	default:
+		return sacrifice
+	}
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -852,6 +1024,44 @@ func playGomokuTurn(c *client.Client, room, token, seat, model string, snap prot
 	return nil
 }
 
+func playDabTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	g, err := dbBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	edge := dbChoose(g, seat)
+	if edge < 0 {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	claims := dbClaims(g, edge)
+	mv, _ := json.Marshal(map[string]int{"edge": edge})
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "claim/safe-edge/short-sacrifice heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	if log != nil {
+		log(fmt.Sprintf("%s (%s) → edge %d (+%d boxes)", seat, model, edge, claims))
+	}
+	switch {
+	case claims > 0:
+		_ = c.Emote(room, token, protocol.EmotionSmug, "")
+	case dbOpens(g, edge) > 0:
+		_ = c.Emote(room, token, protocol.EmotionNervous, "all my moves were bad")
+	default:
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -933,6 +1143,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playReversiTurn(c, room, token, seat, model, snap, log)
 		case "gomoku":
 			turnErr = playGomokuTurn(c, room, token, seat, model, snap, log)
+		case "dots-and-boxes":
+			turnErr = playDabTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -1028,8 +1240,52 @@ func renderGomoku(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
+func renderDab(snap protocol.Snapshot) string {
+	var w dbWire
+	if json.Unmarshal(snap.State, &w) != nil {
+		return fmt.Sprintf("game: dots-and-boxes\nstate: %s", string(snap.State))
+	}
+	owner := func(p *string) string {
+		if p == nil {
+			return ""
+		}
+		return *p
+	}
+	var sb strings.Builder
+	for r := 0; r < dbDots; r++ {
+		for c := 0; c < dbBoxCol; c++ {
+			sb.WriteString("·")
+			if owner(w.Edges[dbH(r, c)]) != "" {
+				sb.WriteString("───")
+			} else {
+				sb.WriteString("   ")
+			}
+		}
+		sb.WriteString("·\n")
+		if r == dbBoxRow {
+			break
+		}
+		for c := 0; c < dbDots; c++ {
+			if owner(w.Edges[dbV(r, c)]) != "" {
+				sb.WriteString("│")
+			} else {
+				sb.WriteString(" ")
+			}
+			if c < dbBoxCol {
+				box := owner(w.Boxes[r*dbBoxCol+c])
+				if box == "" {
+					box = " "
+				}
+				fmt.Fprintf(&sb, " %s ", box)
+			}
+		}
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
+
 // Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
-// Reversi / Gomoku) or a summary.
+// Reversi / Gomoku / Dots and Boxes) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
@@ -1040,6 +1296,8 @@ func Render(snap protocol.Snapshot) string {
 		return renderReversi(snap)
 	case "gomoku":
 		return renderGomoku(snap)
+	case "dots-and-boxes":
+		return renderDab(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`

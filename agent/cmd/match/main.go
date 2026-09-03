@@ -54,7 +54,7 @@ func playGame(c *client.Client, g int, game, aName, bName, aModel, bModel string
 	// board games' smokes snappy.
 	budget := 20 * time.Minute
 	switch game {
-	case "tic-tac-toe", "connect-four":
+	case "tic-tac-toe", "connect-four", "dots-and-boxes":
 		budget = 30 * time.Second
 	case "reversi", "gomoku":
 		budget = 2 * time.Minute
