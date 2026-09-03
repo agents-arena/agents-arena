@@ -17,6 +17,7 @@ import type {
   ConnectFourState,
   MatchReport,
   Player,
+  DotsAndBoxesState,
   GomokuState,
   ReversiState,
   Snapshot,
@@ -29,6 +30,7 @@ import '../components/ttt-watch-board.js';
 import '../components/c4-watch-board.js';
 import '../components/reversi-watch-board.js';
 import '../components/gomoku-watch-board.js';
+import '../components/dab-watch-board.js';
 
 /** Friendly display name per game id. */
 const GAME_NAMES: Record<string, string> = {
@@ -36,6 +38,7 @@ const GAME_NAMES: Record<string, string> = {
   'connect-four': 'Connect Four',
   reversi: 'Reversi',
   gomoku: 'Gomoku',
+  'dots-and-boxes': 'Dots and Boxes',
   chess: 'Chess',
 };
 
@@ -45,6 +48,7 @@ const DEFAULT_SEATS: Record<string, string[]> = {
   'connect-four': ['R', 'Y'],
   reversi: ['B', 'W'],
   gomoku: ['B', 'W'],
+  'dots-and-boxes': ['A', 'B'],
   chess: ['white', 'black'],
 };
 
@@ -55,6 +59,8 @@ const FELT: Record<string, string> = {
   'connect-four': 'radial-gradient(120% 140% at 50% -10%, #1a2a4a 0%, #121a2e 55%, #0c101c 100%)',
   reversi: 'radial-gradient(120% 140% at 50% -10%, #1c3a2b 0%, #12241b 55%, #0b1712 100%)',
   gomoku: 'radial-gradient(120% 140% at 50% -10%, #3a2a18 0%, #241a10 55%, #17100a 100%)',
+  'dots-and-boxes':
+    'radial-gradient(120% 140% at 50% -10%, #262133 0%, #1a1726 55%, #110f1a 100%)',
 };
 
 /** Format a think time compactly: "850ms", "2.6s", "1m 03s". */
@@ -669,6 +675,23 @@ export class ArenaWatchPage extends LitElement {
     return typeof state?.last === 'number' ? state.last : null;
   }
 
+  private _dabEdges(snap: Snapshot | null): (string | null)[] {
+    const state = snap?.state as Partial<DotsAndBoxesState> | undefined;
+    if (state && Array.isArray(state.edges) && state.edges.length === 40) return state.edges;
+    return new Array<string | null>(40).fill(null);
+  }
+
+  private _dabBoxes(snap: Snapshot | null): (string | null)[] {
+    const state = snap?.state as Partial<DotsAndBoxesState> | undefined;
+    if (state && Array.isArray(state.boxes) && state.boxes.length === 16) return state.boxes;
+    return new Array<string | null>(16).fill(null);
+  }
+
+  private _dabNext(snap: Snapshot | null): string {
+    const state = snap?.state as Partial<DotsAndBoxesState> | undefined;
+    return typeof state?.next === 'string' ? state.next : 'A';
+  }
+
   private _seats(snap: Snapshot): string[] {
     if (snap.players.length >= 2) return snap.players.map((p) => p.seat);
     return DEFAULT_SEATS[snap.gameId] ?? ['X', 'O'];
@@ -909,6 +932,7 @@ export class ArenaWatchPage extends LitElement {
     if (gameId === 'connect-four') return this._renderC4Stage(snap);
     if (gameId === 'reversi') return this._renderReversiStage(snap);
     if (gameId === 'gomoku') return this._renderGomokuStage(snap);
+    if (gameId === 'dots-and-boxes') return this._renderDabStage(snap);
     return this._renderTttStage(snap);
   }
 
@@ -985,6 +1009,21 @@ export class ArenaWatchPage extends LitElement {
           next=${this._gomokuNext(snap)}
           .last=${this._gomokuLast(snap)}
         ></gomoku-watch-board>
+        <div class="underboard" style="justify-content:center">
+          ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderDabStage(snap: Snapshot | null) {
+    return html`
+      <div class="felt ttt" style=${`--felt:${FELT['dots-and-boxes']}`}>
+        <dab-watch-board
+          .edges=${this._dabEdges(snap)}
+          .boxes=${this._dabBoxes(snap)}
+          next=${this._dabNext(snap)}
+        ></dab-watch-board>
         <div class="underboard" style="justify-content:center">
           ${this._renderClockOrResult(snap)}${this._renderHintChip(snap)}
         </div>

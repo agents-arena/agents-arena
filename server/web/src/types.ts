@@ -61,6 +61,20 @@ export interface GomokuState {
   last: number | null;
 }
 
+/** Dots and Boxes state (the JSON in `Snapshot.state` for this game). */
+export interface DotsAndBoxesState {
+  /** 40 edges: 20 horizontal (row-major) then 20 vertical; each "A", "B", or null. */
+  edges: (string | null)[];
+  /** 16 boxes, row-major; each "A", "B", or null. */
+  boxes: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** A's box count. */
+  a?: number;
+  /** B's box count. */
+  b?: number;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

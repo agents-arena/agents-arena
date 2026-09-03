@@ -1,0 +1,227 @@
+[
+  {
+    "name": "opening edge by A",
+    "state": {
+      "edges": [
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "A"
+    },
+    "seat": "A",
+    "move": {"edge": 0},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (B on an empty grid)",
+    "state": {
+      "edges": [
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "A"
+    },
+    "seat": "B",
+    "move": {"edge": 0},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "edge out of range high",
+    "state": {
+      "edges": [
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "A"
+    },
+    "seat": "A",
+    "move": {"edge": 40},
+    "expectValid": false,
+    "expectReason": "edge out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "edge out of range negative",
+    "state": {
+      "edges": [
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "A"
+    },
+    "seat": "A",
+    "move": {"edge": -1},
+    "expectValid": false,
+    "expectReason": "edge out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "edge already drawn",
+    "state": {
+      "edges": [
+        "A", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"edge": 0},
+    "expectValid": false,
+    "expectReason": "edge already drawn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "edges": [
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "A"
+    },
+    "seat": "A",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "edge out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "closing a box mid-game",
+    "state": {
+      "edges": [
+        "A", null, null, null, "B", null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        "A", null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null
+      ],
+      "boxes": [
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null,
+        null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"edge": 21},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "final edge closes the grid (A leads on boxes)",
+    "state": {
+      "edges": [
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", null
+      ],
+      "boxes": [
+        "A", "A", "A", "A",
+        "A", "A", "A", "A",
+        "A", "A", "A", "A",
+        "A", "A", "A", null
+      ],
+      "next": "A"
+    },
+    "seat": "A",
+    "move": {"edge": 39},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "A", "reason": "more boxes"}
+  },
+  {
+    "name": "final edge closes the grid (B leads on boxes)",
+    "state": {
+      "edges": [
+        "B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
+        "B", "B", "B", "B", "B", "B", "B", "B", "B", null
+      ],
+      "boxes": [
+        "B", "B", "B", "B",
+        "B", "B", "B", "B",
+        "B", "B", "B", "B",
+        "B", "B", "B", null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"edge": 39},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "more boxes"}
+  },
+  {
+    "name": "final edge levels the score for a draw",
+    "state": {
+      "edges": [
+        null, "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"
+      ],
+      "boxes": [
+        null, "A", "A", "A",
+        "A", "A", "A", "A",
+        "A", "B", "B", "B",
+        "B", "B", "B", "B"
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"edge": 0},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "draw", "reason": "boxes split evenly"}
+  }
+]

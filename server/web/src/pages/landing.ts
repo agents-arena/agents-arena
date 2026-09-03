@@ -17,6 +17,7 @@ const GAMES: ReadonlyArray<{
   { id: 'connect-four', name: 'Connect Four', glyph: '⬤', blurb: 'Drop discs — four in a row' },
   { id: 'reversi', name: 'Reversi', glyph: '◐', blurb: 'Flip discs — own the board' },
   { id: 'gomoku', name: 'Gomoku', glyph: '⚫', blurb: 'Five stones in a row' },
+  { id: 'dots-and-boxes', name: 'Dots & Boxes', glyph: '⊞', blurb: 'Close boxes, keep the turn' },
   { id: 'chess', name: 'Chess', glyph: '♞', blurb: 'The full 8×8 classic' },
 ];
 

@@ -372,3 +372,83 @@ func TestGomokuSelfPlayReachesAWin(t *testing.T) {
 	}
 	t.Fatal("self-play filled the board without a win")
 }
+
+// dbDraw marks edges as drawn, for building a Dots and Boxes position.
+func dbDraw(edges ...int) dbGrid {
+	var g dbGrid
+	for _, e := range edges {
+		g[e] = true
+	}
+	return g
+}
+
+func TestDbChooseClosesABox(t *testing.T) {
+	// Box 0 is on three sides; the fourth edge is the only move worth making.
+	g := dbDraw(dbH(0, 0), dbH(1, 0), dbV(0, 0))
+	got := dbChoose(g, "A")
+	if got != dbV(0, 1) {
+		t.Errorf("dbChoose = %d, want %d (closes box 0)", got, dbV(0, 1))
+	}
+}
+
+func TestDbChoosePrefersTheDoubleClose(t *testing.T) {
+	// Boxes 0 and 1 are both on three sides, sharing their missing edge, and a
+	// third box is one edge from closing on its own. Take the two.
+	g := dbDraw(
+		dbH(0, 0), dbH(1, 0), dbV(0, 0), // box 0 minus the shared edge
+		dbH(0, 1), dbH(1, 1), dbV(0, 2), // box 1 minus the shared edge
+		dbH(0, 3), dbH(1, 3), dbV(0, 3), // box 3 minus one edge
+	)
+	if got := dbChoose(g, "A"); got != dbV(0, 1) {
+		t.Errorf("dbChoose = %d, want %d (closes two boxes at once)", got, dbV(0, 1))
+	}
+}
+
+func TestDbChoosePlaysSafeRatherThanOpenABox(t *testing.T) {
+	// Box 0 has two sides: drawing a third would hand it over. An untouched
+	// edge elsewhere is safe, and that is what the bot must pick.
+	g := dbDraw(dbH(0, 0), dbV(0, 0))
+	got := dbChoose(g, "A")
+	if dbOpens(g, got) != 0 {
+		t.Errorf("dbChoose = %d, which opens %d box(es) while safe edges exist", got, dbOpens(g, got))
+	}
+	if dbClaims(g, got) != 0 {
+		t.Errorf("dbChoose = %d claims a box that should not exist", got)
+	}
+}
+
+func TestDbChooseGivesAwayTheShortestChain(t *testing.T) {
+	// Every remaining edge is a sacrifice: the top box-row is a four-box chain
+	// (all five verticals missing), and box 15 is a lone two-sided box. The bot
+	// must feed the single box, not the chain.
+	var g dbGrid
+	for e := 0; e < dbEdges; e++ {
+		g[e] = true
+	}
+	for c := 0; c < dbDots; c++ {
+		g[dbV(0, c)] = false
+	}
+	g[dbH(4, 3)] = false
+	g[dbV(3, 4)] = false
+
+	got := dbChoose(g, "A")
+	if got < 0 {
+		t.Fatal("dbChoose found no move")
+	}
+	if dbClaims(g, got) != 0 {
+		t.Fatalf("position should offer no free box, but edge %d claims one", got)
+	}
+	if size := dbChainSize(g, got); size > 1 {
+		t.Errorf("dbChoose = %d gives away a chain of %d, want the single box", got, size)
+	}
+}
+
+func TestDbChooseReturnsNoMoveOnAFullGrid(t *testing.T) {
+	var g dbGrid
+	for e := 0; e < dbEdges; e++ {
+		g[e] = true
+	}
+	if got := dbChoose(g, "A"); got != -1 {
+		t.Errorf("dbChoose on a full grid = %d, want -1", got)
+	}
+}

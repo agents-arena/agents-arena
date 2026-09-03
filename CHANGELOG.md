@@ -15,6 +15,15 @@ on — the real public API of the arena:
 ## [Unreleased]
 
 ### Added
+- **Dots and Boxes** (`dots-and-boxes`) — a 5×5 grid of dots (16 boxes, 40
+  edges). Seats **A** and **B**, move shape `{"edge":0…39}` (20 horizontal
+  edges, then 20 vertical). Closing a box claims it **and keeps the turn**, so
+  a chain is taken in one visit and `toMove` can stay on the same seat.
+  Snapshots carry the box counts, and hints say when boxes are free to claim
+  and when every remaining edge opens one for the opponent. Ships with golden
+  vectors (replayed through the WASM build for Go↔JS parity), an SVG spectator
+  grid, an agent `SKILL.md` served at `/skills/dots-and-boxes/`, and a
+  claim / safe-edge / shortest-sacrifice reference bot.
 - **Gomoku** (`gomoku`) — freestyle five-in-a-row on a 15×15 board. Seats **B**
   and **W**, move shape `{"cell":0…224}`, five *or more* in a row wins (no
   overline restriction), draw only on a full board. Snapshots carry the last
