@@ -1,7 +1,7 @@
 // Package bot is a headless game-playing loop driven entirely by the server
 // HTTP API — the reference "terminal agent". It ships smart heuristics for
-// tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes and Checkers, and
-// falls back to random-legal picks for any game that exposes the
+// tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers and
+// Hex, and falls back to random-legal picks for any game that exposes the
 // /v1/rooms/{id}/legal endpoint (chess, etc.).
 //
 // Reasoning-mode contract: under a room's declared reasoning mode "self"
@@ -1037,6 +1037,167 @@ func ckChoose(p ckPos, seat string) (ckMove, bool) {
 	return best, true
 }
 
+// --- hex state & heuristics ---------------------------------------------------
+
+const (
+	hxCols = 11
+	hxRows = 11
+	hxSize = hxCols * hxRows
+)
+
+type hxWire struct {
+	Board [hxSize]*string `json:"board"`
+	Next  string          `json:"next"`
+	Last  *int            `json:"last"`
+}
+
+func hxBoard(snap protocol.Snapshot) ([hxSize]string, error) {
+	var w hxWire
+	if err := json.Unmarshal(snap.State, &w); err != nil {
+		return [hxSize]string{}, err
+	}
+	var b [hxSize]string
+	for i, c := range w.Board {
+		if c != nil {
+			b[i] = *c
+		}
+	}
+	return b, nil
+}
+
+func hxOther(seat string) string {
+	if seat == "R" {
+		return "B"
+	}
+	return "R"
+}
+
+// hxNeighbours returns the up-to-six adjacent cells. On a row-major rhombus the
+// diagonals that count are north-east and south-west.
+func hxNeighbours(i int) []int {
+	r, c := i/hxCols, i%hxCols
+	deltas := [6][2]int{{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, 1}, {1, -1}}
+	out := make([]int, 0, 6)
+	for _, d := range deltas {
+		nr, nc := r+d[0], c+d[1]
+		if nr >= 0 && nr < hxRows && nc >= 0 && nc < hxCols {
+			out = append(out, nr*hxCols+nc)
+		}
+	}
+	return out
+}
+
+// hxDistance is the cheapest path connecting seat's two edges: own stones cost
+// nothing to traverse, empty cells cost one, and the opponent's are impassable.
+// Zero means the game is already won. Dial's algorithm over 0/1 weights.
+func hxDistance(b [hxSize]string, seat string) int {
+	const inf = 1 << 30
+	dist := make([]int, hxSize)
+	for i := range dist {
+		dist[i] = inf
+	}
+	// A double-ended queue: 0-cost moves go to the front, 1-cost to the back.
+	deque := make([]int, 0, hxSize*2)
+	push := func(cell, d int, front bool) {
+		if d >= dist[cell] {
+			return
+		}
+		dist[cell] = d
+		if front {
+			deque = append([]int{cell}, deque...)
+		} else {
+			deque = append(deque, cell)
+		}
+	}
+	for i := 0; i < hxCols; i++ {
+		start := i // blue enters on row 0
+		if seat == "R" {
+			start = i * hxCols // red enters on column 0
+		}
+		switch b[start] {
+		case seat:
+			push(start, 0, true)
+		case "":
+			push(start, 1, false)
+		}
+	}
+	best := inf
+	for len(deque) > 0 {
+		cur := deque[0]
+		deque = deque[1:]
+		d := dist[cur]
+		if d >= best {
+			continue
+		}
+		atGoal := cur%hxCols == hxCols-1
+		if seat == "B" {
+			atGoal = cur/hxCols == hxRows-1
+		}
+		if atGoal {
+			if d < best {
+				best = d
+			}
+			continue
+		}
+		for _, n := range hxNeighbours(cur) {
+			switch b[n] {
+			case seat:
+				push(n, d, true)
+			case "":
+				push(n, d+1, false)
+			}
+		}
+	}
+	return best
+}
+
+// hxChoose plays the cell that most improves our connection relative to the
+// opponent's: win now if a stone connects us, block if one connects them, else
+// minimise our path length while lengthening theirs.
+func hxChoose(b [hxSize]string, seat string) int {
+	opp := hxOther(seat)
+	var empties []int
+	for i := 0; i < hxSize; i++ {
+		if b[i] == "" {
+			empties = append(empties, i)
+		}
+	}
+	if len(empties) == 0 {
+		return -1
+	}
+	for _, cell := range empties {
+		nb := b
+		nb[cell] = seat
+		if hxDistance(nb, seat) == 0 {
+			return cell
+		}
+	}
+	for _, cell := range empties {
+		nb := b
+		nb[cell] = opp
+		if hxDistance(nb, opp) == 0 {
+			return cell
+		}
+	}
+	best, bestScore := empties[0], 0
+	for i, cell := range empties {
+		nb := b
+		nb[cell] = seat
+		// Weigh cutting the opponent as heavily as building our own path: a
+		// stone that only extends our chain while theirs shortens is a losing
+		// trade. Ties go to the centre — without that tie-break the bot walks
+		// along whichever edge happens to come first in index order, which is
+		// how an early version managed to fill row 0 while losing.
+		r, c := cell/hxCols, cell%hxCols
+		centre := hxCols - (abs8(r-hxRows/2) + abs8(c-hxCols/2))
+		score := 4*(hxDistance(nb, opp)-hxDistance(nb, seat)) + centre
+		if i == 0 || score > bestScore {
+			best, bestScore = cell, score
+		}
+	}
+	return best
+}
+
 // --- chess / generic legal-move pick ------------------------------------------
 
 type chessMove struct {
@@ -1331,6 +1492,46 @@ func playCheckersTurn(c *client.Client, room, token, seat, model string, snap pr
 	return nil
 }
 
+func playHexTurn(c *client.Client, room, token, seat, model string, snap protocol.Snapshot, log func(string)) error {
+	b, err := hxBoard(snap)
+	if err != nil {
+		return err
+	}
+	_ = c.Emote(room, token, protocol.EmotionThinking, "")
+	cell := hxChoose(b, seat)
+	if cell < 0 {
+		return fmt.Errorf("%s: no legal move", seat)
+	}
+	mv, _ := json.Marshal(map[string]int{"cell": cell})
+	ack, err := c.Move(room, token, mv, &protocol.MoveMeta{
+		Model:  model,
+		Method: "engine",
+		Note:   "shortest-connection heuristic",
+	})
+	if err != nil {
+		return err
+	}
+	if !ack.OK {
+		time.Sleep(80 * time.Millisecond)
+		return nil
+	}
+	after := b
+	after[cell] = seat
+	left := hxDistance(after, seat)
+	if log != nil {
+		log(fmt.Sprintf("%s (%s) → cell %d (%d to connect)", seat, model, cell, left))
+	}
+	switch {
+	case left == 0:
+		_ = c.Emote(room, token, protocol.EmotionCelebrating, "connected!")
+	case left <= 2:
+		_ = c.Emote(room, token, protocol.EmotionSmug, "")
+	default:
+		_ = c.Emote(room, token, protocol.EmotionConfident, "")
+	}
+	return nil
+}
+
 func playLegalTurn(c *client.Client, room, token, seat, model, gameID string, log func(string)) error {
 	_ = c.Emote(room, token, protocol.EmotionThinking, "")
 	mv, note, err := pickLegal(c, room, gameID)
@@ -1416,6 +1617,8 @@ func Play(ctx context.Context, c *client.Client, room, token, seat, model string
 			turnErr = playDabTurn(c, room, token, seat, model, snap, log)
 		case "checkers":
 			turnErr = playCheckersTurn(c, room, token, seat, model, snap, log)
+		case "hex":
+			turnErr = playHexTurn(c, room, token, seat, model, snap, log)
 		default:
 			turnErr = playLegalTurn(c, room, token, seat, model, snap.GameID, log)
 		}
@@ -1581,8 +1784,31 @@ func renderCheckers(snap protocol.Snapshot) string {
 	return sb.String()
 }
 
+func renderHex(snap protocol.Snapshot) string {
+	b, err := hxBoard(snap)
+	if err != nil {
+		return fmt.Sprintf("game: hex\nstate: %s", string(snap.State))
+	}
+	var sb strings.Builder
+	for r := 0; r < hxRows; r++ {
+		sb.WriteString(strings.Repeat(" ", r))
+		for c := 0; c < hxCols; c++ {
+			switch b[r*hxCols+c] {
+			case "R":
+				sb.WriteString(" R")
+			case "B":
+				sb.WriteString(" B")
+			default:
+				sb.WriteString(" ·")
+			}
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
 // Render draws the board of a snapshot as ASCII (tic-tac-toe / Connect Four /
-// Reversi / Gomoku / Dots and Boxes / Checkers) or a summary.
+// Reversi / Gomoku / Dots and Boxes / Checkers / Hex) or a summary.
 func Render(snap protocol.Snapshot) string {
 	switch snap.GameID {
 	case "tic-tac-toe":
@@ -1597,6 +1823,8 @@ func Render(snap protocol.Snapshot) string {
 		return renderDab(snap)
 	case "checkers":
 		return renderCheckers(snap)
+	case "hex":
+		return renderHex(snap)
 	case "chess":
 		var cs struct {
 			FEN     string   `json:"fen"`

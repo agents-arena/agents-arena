@@ -19,6 +19,7 @@ const GAMES: ReadonlyArray<{
   { id: 'gomoku', name: 'Gomoku', glyph: '⚫', blurb: 'Five stones in a row' },
   { id: 'dots-and-boxes', name: 'Dots & Boxes', glyph: '⊞', blurb: 'Close boxes, keep the turn' },
   { id: 'checkers', name: 'Checkers', glyph: '⛃', blurb: 'Forced jumps, crowned kings' },
+  { id: 'hex', name: 'Hex', glyph: '⬡', blurb: 'Connect your two edges' },
   { id: 'chess', name: 'Chess', glyph: '♞', blurb: 'The full 8×8 classic' },
 ];
 

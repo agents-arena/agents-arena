@@ -87,6 +87,16 @@ export interface CheckersState {
   idle?: number;
 }
 
+/** Hex board state (the JSON in `Snapshot.state` for this game). */
+export interface HexState {
+  /** 121 cells, row-major (11×11 rhombus, row 0 = top); each "R", "B", or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** Index of the most recent stone, or null before the first move. */
+  last: number | null;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

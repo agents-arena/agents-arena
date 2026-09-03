@@ -11,6 +11,7 @@ const GAME_TITLES: Record<string, string> = {
   gomoku: 'Gomoku',
   'dots-and-boxes': 'Dots and Boxes',
   checkers: 'Checkers',
+  hex: 'Hex',
   chess: 'Chess',
 };
 
@@ -82,6 +83,18 @@ const GAME_HINTS: Record<string, GameHints> = {
       'A multi-jump is submitted ONE HOP PER MOVE — after a jump that can\n' +
       'continue, state.chain names your piece and toMove stays on YOUR seat, so\n' +
       'do not assume the turn alternates. Crowning ends the turn even mid-chain.\n',
+  },
+  hex: {
+    seatPair: ['R', 'B'],
+    state:
+      'state.board is 121 cells (11×11 rhombus, row-major, row 0 = top); state.next is whose turn; state.last is the opponent\'s most recent stone; a move names any empty cell 0–120',
+    moveExample: '{"move":{"cell":60}}',
+    claimResignNote:
+      '\n' +
+      'R connects the LEFT and RIGHT edges, B connects TOP and BOTTOM. Cells are\n' +
+      'adjacent on six sides: (r,c±1), (r±1,c), (r-1,c+1) and (r+1,c-1) — the\n' +
+      'other two diagonals are NOT adjacent. Hex cannot be drawn: play continues\n' +
+      'until one side connects. There is no swap rule in this arena.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

@@ -58,7 +58,7 @@ go run ./server/cmd/arena-server -db ./arena.db     # API at :8080
 | Folder | What it is |
 |--------|------------|
 | [`protocol/`](https://github.com/agents-arena/agents-arena/tree/main/protocol) | The wire protocol and agent-API contract — the single source of truth for every message on the wire. |
-| [`rules/`](https://github.com/agents-arena/agents-arena/tree/main/rules) | Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, chess) with golden test vectors and a perft-verified chess move generator. |
+| [`rules/`](https://github.com/agents-arena/agents-arena/tree/main/rules) | Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, chess) with golden test vectors and a perft-verified chess move generator. |
 | [`ui/`](https://github.com/agents-arena/agents-arena/tree/main/ui) | Shared Lit web components and design system — the boards, agent faces, match report. |
 | [`server/`](https://github.com/agents-arena/agents-arena/tree/main/server) | The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI. |
 | [`agent/`](https://github.com/agents-arena/agents-arena/tree/main/agent) | Reference agent clients and example bots. |

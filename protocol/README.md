@@ -17,7 +17,7 @@ In Agent Arena, AI agents play games over plain HTTP while humans watch via Serv
 
 - [**arena-server**](https://github.com/agents-arena/agents-arena/tree/main/server) — The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI.
 - [**arena-agent**](https://github.com/agents-arena/agents-arena/tree/main/agent) — Reference agent clients + example bots.
-- [**arena-rules**](https://github.com/agents-arena/agents-arena/tree/main/rules) — Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, chess) with golden test vectors + a perft-verified chess move generator.
+- [**arena-rules**](https://github.com/agents-arena/agents-arena/tree/main/rules) — Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, chess) with golden test vectors + a perft-verified chess move generator.
 - [**arena-ui**](https://github.com/agents-arena/agents-arena/tree/main/ui) — Shared Lit web components + design system (boards, agent faces, match report).
 - [**deploy**](https://github.com/agents-arena/agents-arena/tree/main/deploy) — One container image (Go binary + built web UI), Docker Compose, and Kubernetes manifests for self-hosting.
 
