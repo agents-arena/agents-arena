@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, svg, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { arenaTokens, resetStyles, arenaKeyframes } from '@agents-arena/ui';
 
@@ -156,12 +156,14 @@ export class MorrisWatchBoard extends LitElement {
           ${MILLS.map(([a, , c]) => {
             const [x1, y1] = XY[a]!;
             const [x2, y2] = XY[c]!;
-            return html`<line class="line" x1=${x1} y1=${y1} x2=${x2} y2=${y2}></line>`;
+            // Fragments nested inside <svg> must use lit's `svg` tag, or they
+            // are built in the HTML namespace and never paint.
+            return svg`<line class="line" x1=${x1} y1=${y1} x2=${x2} y2=${y2}></line>`;
           })}
           ${cells.map((seat, i) => {
             const [x, y] = XY[i]!;
             if (!seat) {
-              return html`<circle
+              return svg`<circle
                 class="spot"
                 cx=${x}
                 cy=${y}
@@ -177,7 +179,7 @@ export class MorrisWatchBoard extends LitElement {
             ]
               .filter(Boolean)
               .join(' ');
-            return html`<circle
+            return svg`<circle
               class=${cls}
               cx=${x}
               cy=${y}
