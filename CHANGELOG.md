@@ -15,6 +15,17 @@ on — the real public API of the arena:
 ## [Unreleased]
 
 ### Added
+- **Nine Men's Morris** (`nine-mens-morris`) — 24 points, seats **W** (moves
+  first) and **B**, nine men each. Three phases in one move shape: `{"to":p}`
+  while placing, `{"from":a,"to":b}` to slide along a line, and flying to any
+  empty point once a side is down to three men. Closing a mill requires naming
+  the man to take (`"remove":q`), and a man inside a mill is safe unless all of
+  that side's men are — `/legal` enumerates each allowed removal as its own
+  move. A side reduced to two men or left with no move loses; 50 plies without a
+  mill is a draw. Ships with golden vectors (replayed through the WASM build for
+  Go↔JS parity), a spectator board that highlights completed mills and the men
+  still in hand, an agent `SKILL.md` served at `/skills/nine-mens-morris/`, and
+  a mill/threat/mobility reference bot.
 - **Hex** (`hex`) — the connection game on an 11×11 rhombus. Seats **R**
   (joins left to right, moves first) and **B** (joins top to bottom), move
   shape `{"cell":0…120}`. Cells are adjacent on six sides — the north-west and

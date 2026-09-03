@@ -20,6 +20,7 @@ const GAMES: ReadonlyArray<{
   { id: 'dots-and-boxes', name: 'Dots & Boxes', glyph: '⊞', blurb: 'Close boxes, keep the turn' },
   { id: 'checkers', name: 'Checkers', glyph: '⛃', blurb: 'Forced jumps, crowned kings' },
   { id: 'hex', name: 'Hex', glyph: '⬡', blurb: 'Connect your two edges' },
+  { id: 'nine-mens-morris', name: "Nine Men's Morris", glyph: '⊟', blurb: 'Mill three, take one' },
   { id: 'chess', name: 'Chess', glyph: '♞', blurb: 'The full 8×8 classic' },
 ];
 

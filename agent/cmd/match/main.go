@@ -56,7 +56,7 @@ func playGame(c *client.Client, g int, game, aName, bName, aModel, bModel string
 	switch game {
 	case "tic-tac-toe", "connect-four", "dots-and-boxes":
 		budget = 30 * time.Second
-	case "reversi", "gomoku", "checkers", "hex":
+	case "reversi", "gomoku", "checkers", "hex", "nine-mens-morris":
 		budget = 2 * time.Minute
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), budget)

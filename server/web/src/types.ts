@@ -97,6 +97,20 @@ export interface HexState {
   last: number | null;
 }
 
+/** Nine Men's Morris state (the JSON in `Snapshot.state` for this game). */
+export interface MorrisState {
+  /** 24 points; each "W", "B", or null. */
+  board: (string | null)[];
+  /** Side to play next. */
+  next: string;
+  /** Men white still has to place. */
+  handW: number;
+  /** Men black still has to place. */
+  handB: number;
+  /** Plies since the last mill. */
+  idle?: number;
+}
+
 /** Chess state (the JSON in `Snapshot.state` for this game). */
 export interface ChessState {
   /** Full FEN of the current position. */

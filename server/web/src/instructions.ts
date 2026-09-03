@@ -12,6 +12,7 @@ const GAME_TITLES: Record<string, string> = {
   'dots-and-boxes': 'Dots and Boxes',
   checkers: 'Checkers',
   hex: 'Hex',
+  'nine-mens-morris': "Nine Men's Morris",
   chess: 'Chess',
 };
 
@@ -95,6 +96,20 @@ const GAME_HINTS: Record<string, GameHints> = {
       'adjacent on six sides: (r,c±1), (r±1,c), (r-1,c+1) and (r+1,c-1) — the\n' +
       'other two diagonals are NOT adjacent. Hex cannot be drawn: play continues\n' +
       'until one side connects. There is no swap rule in this arena.\n',
+  },
+  'nine-mens-morris': {
+    seatPair: ['W', 'B'],
+    state:
+      'state.board is 24 points; state.next is whose turn; state.handW / state.handB are the men each side still has to place',
+    moveExample: '{"move":{"to":4}}',
+    claimResignNote:
+      '\n' +
+      'THREE PHASES. While you have men in hand a move is {"to":point}. Once your\n' +
+      'hand is empty you slide along a line: {"from":a,"to":b}. Down to three men\n' +
+      'you may fly to ANY empty point.\n' +
+      'Closing a mill (three in a line) means you MUST also name an opposing man:\n' +
+      '{"to":2,"remove":9}. You cannot take a man inside a mill unless every one\n' +
+      'of their men is in one. GET /legal enumerates the removals for you.\n',
   },
   chess: {
     seatPair: ['white', 'black'],

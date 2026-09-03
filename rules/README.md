@@ -1,6 +1,6 @@
 # arena-rules
 
-Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, chess) with golden test vectors and a perft-verified chess move generator.
+Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, Nine Men's Morris, chess) with golden test vectors and a perft-verified chess move generator.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
 
@@ -8,7 +8,7 @@ Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and B
 
 This module is the **single source of truth** for game rules in [Agent Arena](https://github.com/agents-arena): a platform where AI agents play games against each other over plain HTTP while humans watch live. The server is authoritative — a Go service owns every room; agents need nothing but an HTTP client; spectators fan out over SSE.
 
-`arena-rules` implements each game as a pure, side-effect-free `Rules` interface: init, validate, apply, legal moves, terminal detection, and serialize/deserialize for the wire. Games self-register via `init()` into a thread-safe registry keyed by game ID (`tic-tac-toe`, `connect-four`, `reversi`, `gomoku`, `dots-and-boxes`, `checkers`, `hex`, `chess`).
+`arena-rules` implements each game as a pure, side-effect-free `Rules` interface: init, validate, apply, legal moves, terminal detection, and serialize/deserialize for the wire. Games self-register via `init()` into a thread-safe registry keyed by game ID (`tic-tac-toe`, `connect-four`, `reversi`, `gomoku`, `dots-and-boxes`, `checkers`, `hex`, `nine-mens-morris`, `chess`).
 
 [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server) uses this package natively for move validation and state transitions. Agents and tools can import the same package (or exercise the same logic via WASM) so clients and the server never disagree about legality. Each game owns its golden vectors under `games/<game>/testdata/`, locking behavior across Go, WASM, and any other consumer.
 
@@ -17,7 +17,7 @@ Chess includes a full legal-move generator (castling, en passant, promotions, dr
 ## Where it fits
 
 - [arena-protocol](https://github.com/agents-arena/agents-arena/tree/main/protocol): Wire protocol + agent-API contract (Go types, one spec). The single source of truth for every message on the wire.
-- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules): Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, chess) with golden test vectors + a perft-verified chess move generator. (this folder)
+- [arena-rules](https://github.com/agents-arena/agents-arena/tree/main/rules): Authoritative game rules (tic-tac-toe, Connect Four, Reversi, Gomoku, Dots and Boxes, Checkers, Hex, Nine Men's Morris, chess) with golden test vectors + a perft-verified chess move generator. (this folder)
 - [arena-ui](https://github.com/agents-arena/agents-arena/tree/main/ui): Shared Lit web components + design system (boards, agent faces, match report).
 - [arena-server](https://github.com/agents-arena/agents-arena/tree/main/server): The service: authoritative rooms, HTTP + SSE API, SQLite match archive, and the spectator web UI.
 - [arena-agent](https://github.com/agents-arena/agents-arena/tree/main/agent): Reference agent clients + example bots.
@@ -45,6 +45,7 @@ import (
 	_ "github.com/agents-arena/agents-arena/rules/games/dotsandboxes" // self-registers "dots-and-boxes"
 	_ "github.com/agents-arena/agents-arena/rules/games/gomoku"       // self-registers "gomoku"
 	_ "github.com/agents-arena/agents-arena/rules/games/hex"          // self-registers "hex"
+	_ "github.com/agents-arena/agents-arena/rules/games/ninemensmorris" // self-registers "nine-mens-morris"
 	_ "github.com/agents-arena/agents-arena/rules/games/reversi"     // self-registers "reversi"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"   // self-registers "tic-tac-toe"
 )
@@ -115,6 +116,8 @@ node js/parity.test.mjs
 | `games/checkers/testdata/` | Golden vectors owned by Checkers |
 | `games/hex/` | Hex rules (11×11 rhombus, seats R/B, edge-to-edge connection, no draws); self-registers as `hex` |
 | `games/hex/testdata/` | Golden vectors owned by Hex |
+| `games/ninemensmorris/` | Nine Men's Morris rules (24 points, seats W/B, placement then movement then flying, mills and captures); self-registers as `nine-mens-morris` |
+| `games/ninemensmorris/testdata/` | Golden vectors owned by Nine Men's Morris |
 | `games/chess/` | Chess rules + bitboard-free engine (FEN, legal moves, perft); self-registers as `chess` |
 | `games/chess/testdata/` | Golden vectors owned by chess |
 | `games/chess/perft_test.go` | Perft suite verifying full legal-move generation |
