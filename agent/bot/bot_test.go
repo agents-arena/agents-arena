@@ -234,3 +234,141 @@ func TestRvChooseReturnsNoMoveWhenStuck(t *testing.T) {
 		t.Errorf("rvChoose = %d, want -1", got)
 	}
 }
+
+// gmTestBoard builds a Gomoku board from 15 rows of 15 runes, row 0 = top.
+// '.' is an empty point, 'B'/'W' are stones.
+func gmTestBoard(t *testing.T, rows ...string) [gmSize]string {
+	t.Helper()
+	if len(rows) != gmRows {
+		t.Fatalf("need %d rows, got %d", gmRows, len(rows))
+	}
+	var b [gmSize]string
+	for r, row := range rows {
+		if len(row) != gmCols {
+			t.Fatalf("row %d: need %d points, got %d", r, gmCols, len(row))
+		}
+		for c, ch := range row {
+			if ch != '.' {
+				b[r*gmCols+c] = string(ch)
+			}
+		}
+	}
+	return b
+}
+
+// gmRows15 returns an empty board as 15 blank rows, for tests to overwrite.
+func gmRows15() []string {
+	rows := make([]string, gmRows)
+	for i := range rows {
+		rows[i] = "..............."
+	}
+	return rows
+}
+
+// gmPut writes a run of stones into the row strings, left to right.
+func gmPut(rows []string, r, c int, seat string, n int) {
+	for i := 0; i < n; i++ {
+		rows[r] = rows[r][:c+i] + seat + rows[r][c+i+1:]
+	}
+}
+
+func TestGmChooseOpensInTheCentre(t *testing.T) {
+	var empty [gmSize]string
+	if got := gmChoose(empty, "B"); got != 7*gmCols+7 {
+		t.Errorf("gmChoose on an empty board = %d, want the centre 112", got)
+	}
+}
+
+func TestGmChooseTakesTheWinBeforeBlocking(t *testing.T) {
+	// Both sides have four in a row: B on row 7, W on row 9. B must complete
+	// its own five (either end of the run) rather than block W's.
+	rows := gmRows15()
+	gmPut(rows, 7, 4, "B", 4)
+	gmPut(rows, 9, 4, "W", 4)
+	b := gmTestBoard(t, rows...)
+	got := gmChoose(b, "B")
+	if got != 7*gmCols+3 && got != 7*gmCols+8 {
+		t.Errorf("gmChoose = %d, want an end of B's own four (%d or %d)", got, 7*gmCols+3, 7*gmCols+8)
+	}
+	if !gmWinsAt(b, got, "B") {
+		t.Errorf("gmChoose = %d, which does not win", got)
+	}
+}
+
+func TestGmChooseBlocksAnOpponentFour(t *testing.T) {
+	// W is one point from five and B has nothing going: B must block. Either
+	// end of the run stops it.
+	rows := gmRows15()
+	gmPut(rows, 6, 5, "W", 4)
+	gmPut(rows, 12, 1, "B", 1)
+	b := gmTestBoard(t, rows...)
+	got := gmChoose(b, "B")
+	if got != 6*gmCols+4 && got != 6*gmCols+9 {
+		t.Errorf("gmChoose = %d, want an end of W's four (%d or %d)", got, 6*gmCols+4, 6*gmCols+9)
+	}
+}
+
+func TestGmChoosePlaysNearTheAction(t *testing.T) {
+	rows := gmRows15()
+	gmPut(rows, 7, 7, "B", 1)
+	gmPut(rows, 8, 7, "W", 1)
+	b := gmTestBoard(t, rows...)
+	got := gmChoose(b, "B")
+	r, c := got/gmCols, got%gmCols
+	if r < 5 || r > 10 || c < 5 || c > 9 {
+		t.Errorf("gmChoose = %d (row %d col %d), want a point near the two stones", got, r, c)
+	}
+	if b[got] != "" {
+		t.Errorf("gmChoose picked an occupied point %d", got)
+	}
+}
+
+func TestGmWinsAtCountsEveryDirection(t *testing.T) {
+	cases := []struct {
+		name   string
+		dr, dc int
+	}{{"horizontal", 0, 1}, {"vertical", 1, 0}, {"diagonal", 1, 1}, {"anti-diagonal", 1, -1}}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var b [gmSize]string
+			r, c := 7, 7
+			// Four stones leading up to (7,7), which is left empty.
+			for k := 1; k <= 4; k++ {
+				b[(r-tc.dr*k)*gmCols+(c-tc.dc*k)] = "B"
+			}
+			if !gmWinsAt(b, r*gmCols+c, "B") {
+				t.Error("completing the fifth stone was not seen as a win")
+			}
+			if gmWinsAt(b, r*gmCols+c, "W") {
+				t.Error("the same point counted as a win for the other seat")
+			}
+		})
+	}
+}
+
+// TestGomokuSelfPlayReachesAWin plays the heuristic against itself and asserts
+// somebody wins well before the board fills.
+func TestGomokuSelfPlayReachesAWin(t *testing.T) {
+	var b [gmSize]string
+	seat := "B"
+	for ply := 0; ply < gmSize; ply++ {
+		cell := gmChoose(b, seat)
+		if cell < 0 {
+			t.Fatalf("no move at ply %d", ply)
+		}
+		if b[cell] != "" {
+			t.Fatalf("ply %d picked occupied point %d", ply, cell)
+		}
+		win := gmWinsAt(b, cell, seat)
+		b[cell] = seat
+		if win {
+			t.Logf("%s wins at ply %d (point %d)", seat, ply+1, cell)
+			if ply > 80 {
+				t.Errorf("self-play took %d plies to produce a win", ply+1)
+			}
+			return
+		}
+		seat = gmOther(seat)
+	}
+	t.Fatal("self-play filled the board without a win")
+}
