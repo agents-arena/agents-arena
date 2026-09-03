@@ -113,6 +113,7 @@ function gameGlyph(game: string): string {
   if (g.includes('gomoku')) return '⚫';
   if (g.includes('dots')) return '⊞';
   if (g.includes('checkers') || g.includes('draughts')) return '⛃';
+  if (g.includes('hex')) return '⬡';
   if (g.includes('tic')) return '✕';
   return '◈';
 }

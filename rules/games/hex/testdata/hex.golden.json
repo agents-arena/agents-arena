@@ -1,0 +1,262 @@
+[
+  {
+    "name": "opening stone by R",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"cell": 60},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "wrong turn (B on an empty board)",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "B",
+    "move": {"cell": 60},
+    "expectValid": false,
+    "expectReason": "not your turn",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range high",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"cell": 121},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell out of range negative",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"cell": -1},
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "cell occupied",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, "R", null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B",
+      "last": 60
+    },
+    "seat": "B",
+    "move": {"cell": 60},
+    "expectValid": false,
+    "expectReason": "cell occupied",
+    "expectResultAfter": null
+  },
+  {
+    "name": "malformed move payload",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": "not-an-object",
+    "expectValid": false,
+    "expectReason": "cell out of range",
+    "expectResultAfter": null
+  },
+  {
+    "name": "red completes a row and connects left to right",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        "B", "B", "B", null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"cell": 65},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "connected left to right"}
+  },
+  {
+    "name": "blue completes a column and connects top to bottom",
+    "state": {
+      "board": [
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        null, null, null, "B", null, null, null, null, null, null, null,
+        "R", "R", "R", "B", null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 113},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "B", "reason": "connected top to bottom"}
+  },
+  {
+    "name": "red completes a north-east staircase",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, "R", null,
+        null, null, null, null, null, null, null, null, "R", null, null,
+        null, null, null, null, null, null, null, "R", null, null, null,
+        null, null, null, null, null, null, "R", null, null, null, null,
+        null, null, null, null, null, "R", null, null, null, null, null,
+        null, null, null, null, "R", null, null, null, null, null, null,
+        null, null, null, "R", null, null, null, null, null, null, null,
+        null, null, "R", null, null, null, null, null, null, null, null,
+        null, "R", null, null, null, null, null, null, null, null, null,
+        "R", null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "R"
+    },
+    "seat": "R",
+    "move": {"cell": 10},
+    "expectValid": true,
+    "expectResultAfter": {"kind": "win", "winner": "R", "reason": "connected left to right"}
+  },
+  {
+    "name": "a chain with a hole in it is not a connection",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        "R", "R", "R", "R", "R", null, "R", "R", "R", "R", "R",
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 0},
+    "expectValid": true,
+    "expectResultAfter": null
+  },
+  {
+    "name": "game over once a side has connected",
+    "state": {
+      "board": [
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R",
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null
+      ],
+      "next": "B"
+    },
+    "seat": "B",
+    "move": {"cell": 0},
+    "expectValid": false,
+    "expectReason": "game over",
+    "expectResultAfter": null
+  }
+]

@@ -1,6 +1,9 @@
 package bot
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // c4TestBoard builds a Connect Four board from 6 rows of 7 runes, row 0 = top.
 // '.' is an empty cell, 'R'/'Y' are discs.
@@ -577,4 +580,140 @@ func TestCkApplyCrownsAndStopsTheChain(t *testing.T) {
 	if again {
 		t.Error("ckApply wants to keep jumping after a crowning")
 	}
+}
+
+// hxTestBoard builds a Hex position from 11 rows of 11 runes: '.' empty, R/B.
+func hxTestBoard(t *testing.T, rows ...string) [hxSize]string {
+	t.Helper()
+	if len(rows) != hxRows {
+		t.Fatalf("need %d rows, got %d", hxRows, len(rows))
+	}
+	var b [hxSize]string
+	for r, row := range rows {
+		if len(row) != hxCols {
+			t.Fatalf("row %d: need %d cells, got %d", r, hxCols, len(row))
+		}
+		for c, ch := range row {
+			if ch != '.' {
+				b[r*hxCols+c] = string(ch)
+			}
+		}
+	}
+	return b
+}
+
+func hxBlank() []string {
+	rows := make([]string, hxRows)
+	for i := range rows {
+		rows[i] = strings.Repeat(".", hxCols)
+	}
+	return rows
+}
+
+func hxPut(rows []string, r, c int, seat string) {
+	rows[r] = rows[r][:c] + seat + rows[r][c+1:]
+}
+
+func TestHxDistanceMeasuresTheConnection(t *testing.T) {
+	// An empty board needs one stone per column.
+	var empty [hxSize]string
+	if got := hxDistance(empty, "R"); got != hxCols {
+		t.Errorf("hxDistance on an empty board = %d, want %d", got, hxCols)
+	}
+
+	// A finished row costs nothing.
+	rows := hxBlank()
+	for c := 0; c < hxCols; c++ {
+		hxPut(rows, 5, c, "R")
+	}
+	if got := hxDistance(hxTestBoard(t, rows...), "R"); got != 0 {
+		t.Errorf("hxDistance across a finished row = %d, want 0", got)
+	}
+
+	// One gap costs exactly one stone.
+	rows = hxBlank()
+	for c := 0; c < hxCols; c++ {
+		if c == 5 {
+			continue
+		}
+		hxPut(rows, 5, c, "R")
+	}
+	if got := hxDistance(hxTestBoard(t, rows...), "R"); got != 1 {
+		t.Errorf("hxDistance with one gap = %d, want 1", got)
+	}
+}
+
+func TestHxChooseCompletesTheConnection(t *testing.T) {
+	rows := hxBlank()
+	for c := 0; c < hxCols; c++ {
+		if c == 7 {
+			continue
+		}
+		hxPut(rows, 4, c, "R")
+	}
+	b := hxTestBoard(t, rows...)
+	if got := hxChoose(b, "R"); got != 4*hxCols+7 {
+		t.Errorf("hxChoose = %d, want %d (completes the row)", got, 4*hxCols+7)
+	}
+}
+
+func TestHxChooseBlocksTheOpponentsLastCell(t *testing.T) {
+	// Blue is one cell from joining top to bottom; red has nothing going.
+	rows := hxBlank()
+	for r := 0; r < hxRows; r++ {
+		if r == 6 {
+			continue
+		}
+		hxPut(rows, r, 2, "B")
+	}
+	b := hxTestBoard(t, rows...)
+	if got := hxChoose(b, "R"); got != 6*hxCols+2 {
+		t.Errorf("hxChoose = %d, want %d (blocks blue)", got, 6*hxCols+2)
+	}
+}
+
+func TestHxChooseShortensItsOwnPath(t *testing.T) {
+	var b [hxSize]string
+	before := hxDistance(b, "R")
+	cell := hxChoose(b, "R")
+	if cell < 0 {
+		t.Fatal("no move found")
+	}
+	b[cell] = "R"
+	if after := hxDistance(b, "R"); after >= before {
+		t.Errorf("distance went from %d to %d — the move did not help", before, after)
+	}
+}
+
+func TestHxChooseReturnsNoMoveOnAFullBoard(t *testing.T) {
+	var b [hxSize]string
+	for i := range b {
+		b[i] = "R"
+	}
+	if got := hxChoose(b, "B"); got != -1 {
+		t.Errorf("hxChoose on a full board = %d, want -1", got)
+	}
+}
+
+// TestHexSelfPlayIsSane guards the tie-break: an earlier version scored only
+// its own path and walked along row 0 by index order, losing every game.
+func TestHexSelfPlayIsSane(t *testing.T) {
+	var b [hxSize]string
+	seat := "R"
+	for ply := 0; ply < hxSize; ply++ {
+		cell := hxChoose(b, seat)
+		if cell < 0 || b[cell] != "" {
+			t.Fatalf("ply %d: bad move %d", ply, cell)
+		}
+		b[cell] = seat
+		if hxDistance(b, seat) == 0 {
+			t.Logf("%s connects at ply %d", seat, ply+1)
+			if ply+1 > 60 {
+				t.Errorf("self-play took %d plies", ply+1)
+			}
+			return
+		}
+		seat = hxOther(seat)
+	}
+	t.Fatal("self-play filled the board without a connection")
 }

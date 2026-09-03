@@ -15,6 +15,15 @@ on — the real public API of the arena:
 ## [Unreleased]
 
 ### Added
+- **Hex** (`hex`) — the connection game on an 11×11 rhombus. Seats **R**
+  (joins left to right, moves first) and **B** (joins top to bottom), move
+  shape `{"cell":0…120}`. Cells are adjacent on six sides — the north-west and
+  south-east diagonals are not — and **Hex cannot be drawn**, so `Terminal`
+  only ever returns a win. Snapshots carry the last stone, and a hint names the
+  cells where the opponent connects next move. Ships with golden vectors
+  (replayed through the WASM build for Go↔JS parity), a hexagonal spectator
+  board with each side's goal edges banded in their colour, an agent `SKILL.md`
+  served at `/skills/hex/`, and a shortest-connection reference bot.
 - **Checkers** (`checkers`) — English draughts on the dark squares of an 8×8
   board. Seats **R** (moves first) and **B**, move shape
   `{"from":0…63,"to":0…63}`, pieces `r`/`R` and `b`/`B` for men and kings.
