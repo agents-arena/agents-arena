@@ -7,6 +7,7 @@ import (
 	"syscall/js"
 
 	_ "github.com/agents-arena/agents-arena/rules/games/connectfour"
+	_ "github.com/agents-arena/agents-arena/rules/games/reversi"
 	_ "github.com/agents-arena/agents-arena/rules/games/tictactoe"
 	"github.com/agents-arena/agents-arena/rules/spec"
 )
